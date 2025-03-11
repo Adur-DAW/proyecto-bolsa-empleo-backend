@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Usuario extends Authenticatable implements JWTSubject
 {
@@ -68,5 +69,16 @@ class Usuario extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+
+    public function empresa()
+    {
+        return $this->hasOne(Empresa::class, 'id_usuario');
+    }
+
+    public function demandante()
+    {
+        return $this->hasOne(Demandante::class, 'id_usuario');
     }
 }

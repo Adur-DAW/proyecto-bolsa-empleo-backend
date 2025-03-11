@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Demandante extends Model
+class Empresa extends Model
 {
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'demandantes';
+    protected $table = 'empresas';
 
     /**
      * The primary key associated with the table.
@@ -27,13 +27,6 @@ class Demandante extends Model
      */
     protected $fillable = [
         'id_usuario',
-        'email',
-        'dni',
-        'nombre',
-        'apellido1',
-        'apellido2',
-        'telefono_movil',
-        'situacion'
     ];
 
     public function usuario()
