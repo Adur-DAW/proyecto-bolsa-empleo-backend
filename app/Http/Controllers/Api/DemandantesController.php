@@ -15,10 +15,6 @@ class DemandantesController extends Controller
     {
         $usuario = JWTAuth::parseToken()->authenticate();
 
-        // if ($usuario->tipo_usuario !== 'demandante') {
-        //     return response()->json(['error' => 'No autorizado'], 403);
-        // }
-
         $request->validate([
             'dni' => 'required|string|size:9|unique:demandantes,dni',
             'nombre' => 'required|string|max:45',

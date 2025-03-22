@@ -14,10 +14,6 @@ class EmpresasController extends Controller
     {
         $usuario = JWTAuth::parseToken()->authenticate();
 
-        // if ($usuario->tipo_usuario !== 'empresa') {
-        //     return response()->json(['error' => 'No autorizado'], 403);
-        // }
-
         $request->validate([
             'cif' => 'required|string|size:9|unique:empresas,cif',
             'nombre' => 'required|string|max:45',

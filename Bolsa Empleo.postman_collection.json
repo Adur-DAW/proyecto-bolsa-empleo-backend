@@ -1,0 +1,645 @@
+{
+	"info": {
+		"_postman_id": "d4ea6c3d-2017-4ace-ad8c-71be0b20225e",
+		"name": "Bolsa Empleo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4458663"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"item": [
+						{
+							"name": "Login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"123456\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{URL}}/login",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login Empresa",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"empresa@empresa.com\",\r\n    \"password\": \"123456\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{URL}}/login",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login Admin",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"admin@admin.com\",\r\n    \"password\": \"123456\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{URL}}/login",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Registrar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nombre\": \"Admin\",\r\n    \"email\": \"admin@admin.com\",\r\n    \"password\": \"123456\",\r\n    \"password_confirmation\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/registrar",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"registrar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Usuarios JWT",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/usuarios/jwt",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"usuarios",
+								"jwt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nombre\": \"Adur\",\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"123456\",\r\n    \"password_confirmation\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/cerrar-sesion",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"cerrar-sesion"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Demandante",
+			"item": [
+				{
+					"name": "Obtener Demandante JWT",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/demandantes/jwt",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"demandantes",
+								"jwt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Demandantes",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/demandantes/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"demandantes",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Demandante",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"dni\": \"12345678A\",\r\n    \"nombre\": \"Juan\",\r\n    \"apellido1\": \"Pérez\",\r\n    \"apellido2\": \"Gómez\",\r\n    \"telefono_movil\": \"600123456\",\r\n    \"email\": \"juanperez@example.com\",\r\n    \"situacion\": 1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/demandantes/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"demandantes",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar demandante",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/demandantes/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"demandantes",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Empresa",
+			"item": [
+				{
+					"name": "Obtener Empresa JWT",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/empresas/jwt",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"empresas",
+								"jwt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Empresas",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/empresas/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"empresas",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Empresa",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"cif\": \"W0312832I\",\r\n    \"nombre\": \"Adur TI\",\r\n    \"localidad\": \"Alsasua\",\r\n    \"telefono\": \"948101010\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/empresas/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"empresas",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Empresa",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/empresas/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"empresas",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Oferta",
+			"item": [
+				{
+					"name": "Obtener Ofertas",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/ofertas/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"ofertas",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Oferta",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"nombre\": \"Ejemplo de Nombre\",\r\n  \"fecha_publicacion\": \"2025-03-22\",\r\n  \"numero_puestos\": 5,\r\n  \"tipo_contrato\": \"Indefinido\",\r\n  \"horario\": \"08:00 - 17:00\",\r\n  \"obs\": \"Observaciones opcionales\",\r\n  \"abierta\": true,\r\n  \"fecha_cierre\": \"2025-04-22\",\r\n  \"id_empresa\": 1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/ofertas/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"ofertas",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Oferta",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"nombre\": \"Ejemplo de Nombre\",\r\n  \"fecha_publicacion\": \"2025-03-22\",\r\n  \"numero_puestos\": 5,\r\n  \"tipo_contrato\": \"Indefinido\",\r\n  \"horario\": \"08:00 - 17:00\",\r\n  \"obs\": \"Observaciones opcionales\",\r\n  \"abierta\": true,\r\n  \"fecha_cierre\": \"2025-04-22\",\r\n  \"id_empresa\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/ofertas/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"ofertas",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Titulo",
+			"item": [
+				{
+					"name": "Obtener Titulos",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/titulos/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"titulos",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Titulo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"nombre\": \"DAWs\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/titulos/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"titulos",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Titulo",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"nombre\": \"DAW\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/titulo/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"titulo",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{TokenEmpresa}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URL",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "TokenEmpresa",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzQyNjQ0MjczLCJleHAiOjE3NDI2NDc4NzMsIm5iZiI6MTc0MjY0NDI3MywianRpIjoiWmIxWWxBdmFTU1l1Z1NCbyIsInN1YiI6IjMiLCJwcnYiOiI1ODcwODYzZDRhNjJkNzkxNDQzZmFmOTM2ZmMzNjgwMzFkMTEwYzRmIn0.R2IXmTlV5478ZYeDkCzQF-HBi2oLjpvzxDDwtuwBy-Y",
+			"type": "string"
+		},
+		{
+			"key": "TokenAdmin",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzQyNjQ0MzEzLCJleHAiOjE3NDI2NDc5MTMsIm5iZiI6MTc0MjY0NDMxMywianRpIjoiWUV3ejNPT0FoV1prYnl3RiIsInN1YiI6IjIiLCJwcnYiOiI1ODcwODYzZDRhNjJkNzkxNDQzZmFmOTM2ZmMzNjgwMzFkMTEwYzRmIn0.0tIiiUPek6ruJUmBlzJtqKEv8ANNBj34-fLuh5f75Us",
+			"type": "string"
+		}
+	]
+}

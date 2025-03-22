@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 45)->nullable();
             $table->date('fecha_publicacion')->nullable();
-            $table->tinyInteger('numero_puesto')->nullable();
-            $table->string('tipo_cont', 45)->nullable();
+            $table->tinyInteger('numero_puestos')->nullable();
+            $table->string('tipo_contrato', 45)->nullable();
             $table->string('horario', 45)->nullable();
             $table->string('obs', 45)->nullable();
             $table->tinyInteger('abierta')->nullable();
