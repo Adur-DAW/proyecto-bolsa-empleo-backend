@@ -27,6 +27,11 @@ class Empresa extends Model
      */
     protected $fillable = [
         'id_usuario',
+        'validado',
+        'cif',
+        'nombre',
+        'telefono',
+        'localidad'
     ];
 
     public function usuario()

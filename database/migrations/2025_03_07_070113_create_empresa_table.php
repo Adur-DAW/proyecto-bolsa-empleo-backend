@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('empresas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_usuario')->constrained('usuarios')->onDelete('cascade');
             $table->tinyInteger('validado');
             $table->string('cif', 11)->unique();
             $table->string('nombre', 45);

@@ -46,10 +46,17 @@ class DemandantesController extends Controller
         ], 201);
     }
 
-    public function obtener()
+    public function obtenerJWT()
     {
         $usuario = Usuario::with('demandante')->find(JWTAuth::parseToken()->authenticate()->id);
 
         return response()->json($usuario);
+    }
+
+    public function obtener()
+    {
+        $demandantes = Demandante::all();
+
+        return response()->json($demandantes);
     }
 }
