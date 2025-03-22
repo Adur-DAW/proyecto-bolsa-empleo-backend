@@ -36,4 +36,9 @@ class Oferta extends Model
         'fecha_cierre',
         'id_empresa'
     ];
+
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'id_empresa');
+    }
 }

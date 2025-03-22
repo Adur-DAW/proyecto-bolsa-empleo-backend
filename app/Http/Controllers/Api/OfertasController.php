@@ -49,7 +49,7 @@ class OfertasController extends Controller
 
     public function obtener()
     {
-        $ofertas = Oferta::all();
+        $ofertas = Oferta::with('empresa')->get();
 
         return response()->json($ofertas);
     }
