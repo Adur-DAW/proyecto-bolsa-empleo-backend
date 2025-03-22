@@ -7,6 +7,7 @@ use App\Http\Middleware\JwtMiddleware;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OfertasController;
 use App\Http\Controllers\Api\TitulosController;
+use App\Http\Controllers\Api\TitulosDemandanteController;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
@@ -28,4 +29,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
     Route::post('ofertas', [OfertasController::class, 'registrar']);
     Route::post('titulos', [TitulosController::class, 'registrar']);
+
+    Route::get('titulos/demandante/jwt', [TitulosDemandanteController::class, 'obtenerJWT']);
+    Route::post('titulos/demandante', [TitulosDemandanteController::class, 'registrar']);
 });
