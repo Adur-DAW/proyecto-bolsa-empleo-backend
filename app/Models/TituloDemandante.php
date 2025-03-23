@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Thiagoprz\CompositeKey\HasCompositeKey;
 class TituloDemandante extends Model
 {
+    use HasCompositeKey;
+
     /**
      * The table associated with the model.
      *
@@ -13,12 +15,10 @@ class TituloDemandante extends Model
      */
     protected $table = 'titulos_demandante';
 
-    /**
-     * The primary key associated with the table.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
+
+    protected $primaryKey = ['id_demandante', 'id_titulo'];
+
+    public $incrementing = false;
 
     /**
      * The attributes that are mass assignable.
@@ -41,5 +41,10 @@ class TituloDemandante extends Model
     public function demandante()
     {
         return $this->belongsTo(Demandante::class, 'id_demandante');
+    }
+
+    public function getCursandoAttribute($value)
+    {
+        return (bool) $value;
     }
 }

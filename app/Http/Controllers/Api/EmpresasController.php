@@ -36,6 +36,32 @@ class EmpresasController extends Controller
         ], 201);
     }
 
+    public function actualizar(Request $request)
+    {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        $request->validate([
+            'cif' => 'required|string|size:9',
+            'nombre' => 'required|string|max:45',
+            'localidad' => 'required|string|max:45',
+            'telefono' => 'required|string|size:9'
+        ]);
+
+        $empresa = Empresa::where('id_usuario', $usuario->id)->first();
+
+        $empresa->update([
+            'cif' => $request->cif,
+            'nombre' => $request->nombre,
+            'localidad' => $request->localidad,
+            'telefono' => $request->telefono
+        ]);
+
+        return response()->json([
+            'message' => 'Empresa actualizada con éxito',
+            'empresa' => $empresa
+        ]);
+    }
+
     public function obtenerJWT()
     {
         $usuario = Usuario::with('empresa')->find(JWTAuth::parseToken()->authenticate()->id);

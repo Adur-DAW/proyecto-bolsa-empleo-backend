@@ -46,12 +46,12 @@ class JWTAuthController extends Controller
                 'apellido1' => 'required|string|max:45',
                 'apellido2' => 'nullable|string|max:45',
                 'telefono_movil' => 'required|string|size:9',
-                'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')->ignore($usuario->id, 'id_usuario')],
+                'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')],
                 'situacion' => 'required|integer|min:0|max:1',
             ]);
 
             $demandante = Demandante::create([
-                'id_usuario' => $usuario->id,
+                'id_demandante' => $usuario->id,
                 'dni' => $request->dni,
                 'nombre' => $request->nombre,
                 'apellido1' => $request->apellido1,
@@ -109,7 +109,7 @@ class JWTAuthController extends Controller
             return response()->json(['error' => 'Credenciales invalidas'], 401);
         }
 
-        $usuarioAuth = auth()->user();
+        $usuarioAuth = JWTAuth::user();
 
         $usuario = [
             'id' => $usuarioAuth->id,
@@ -126,11 +126,21 @@ class JWTAuthController extends Controller
         elseif ($usuarioAuth->rol == 'empresa')
         {
             $usuarioAuth->load('empresa');
+
+            if ($usuarioAuth->empresa->validado == false) {
+                return response()->json(['error' => 'La empresa no ha sido validada'], 403);
+            }
+
             $usuario['nombreCompleto'] = $usuarioAuth->empresa->nombre ?? 'Sin nombre';
         }
         else
         {
-            $usuario['rol'] = 'sinrol';
+            if ($usuarioAuth->rol == 'centro') {
+                $usuario['nombreCompleto'] = 'Administrador';
+            }
+            else {
+                return response()->json(['error' => 'El usuario no tiene ROL'], 403);
+            }
         }
 
         return response()->json([

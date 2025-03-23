@@ -24,14 +24,15 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('cerrar-sesion', [JWTAuthController::class, 'cerrarSesion']);
 
     Route::get('demandantes/jwt', [DemandantesController::class, 'obtenerJWT']);
-    // Route::post('demandantes', [DemandantesController::class, 'registrar']);
+    Route::put('demandantes', [DemandantesController::class, 'actualizar']);
+    Route::get('demandante/titulos', [TitulosDemandanteController::class, 'obtenerJWT']);
+    Route::post('demandante/titulos', [TitulosDemandanteController::class, 'registrar']);
+    Route::put('demandante/titulos/{id}', [TitulosDemandanteController::class, 'actualizar']);
+    Route::delete('demandante/titulos/{id}', [TitulosDemandanteController::class, 'eliminar']);
 
     Route::get('empresas/jwt', [EmpresasController::class, 'obtenerJWT']);
-    // Route::post('empresas', [EmpresasController::class, 'registrar']);
+    Route::put('empresas', [EmpresasController::class, 'actualizar']);
 
     Route::post('ofertas', [OfertasController::class, 'registrar']);
     Route::post('titulos', [TitulosController::class, 'registrar']);
-
-    Route::get('titulos/demandante/jwt', [TitulosDemandanteController::class, 'obtenerJWT']);
-    Route::post('titulos/demandante', [TitulosDemandanteController::class, 'registrar']);
 });

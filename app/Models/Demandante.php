@@ -18,7 +18,7 @@ class Demandante extends Model
      *
      * @var string
      */
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_demandante';
 
     /**
      * The attributes that are mass assignable.
@@ -26,7 +26,7 @@ class Demandante extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'id_usuario',
+        'id_demandante',
         'email',
         'dni',
         'nombre',
@@ -38,7 +38,7 @@ class Demandante extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'id_demandante', 'id');
     }
 
     public function titulos()

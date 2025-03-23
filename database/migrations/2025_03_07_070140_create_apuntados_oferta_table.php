@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('apuntados_oferta', function (Blueprint $table) {
             $table->foreignId('id_oferta')->constrained('oferta');
             $table->foreignId('id_demandante')->constrained('demandante');
-            $table->string('adjudicada', 45)->nullable();
+            $table->boolean('adjudicada')->default(false);
             $table->date('fecha')->nullable();
             $table->primary(['id_oferta', 'id_demandante']);
             $table->timestamps();
