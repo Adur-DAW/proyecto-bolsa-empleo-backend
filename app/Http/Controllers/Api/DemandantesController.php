@@ -46,7 +46,7 @@ class DemandantesController extends Controller
     {
         $usuario = Usuario::with('demandante')->find(JWTAuth::parseToken()->authenticate()->id);
 
-        return response()->json($usuario);
+        return response()->json($usuario->demandante);
     }
 
     public function obtener()

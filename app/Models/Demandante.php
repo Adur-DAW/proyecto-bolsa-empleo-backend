@@ -40,4 +40,9 @@ class Demandante extends Model
     {
         return $this->belongsTo(Usuario::class, 'id_usuario');
     }
+
+    public function titulos()
+    {
+        return $this->hasMany(TituloDemandante::class, 'id_demandante');
+    }
 }

@@ -40,7 +40,7 @@ class EmpresasController extends Controller
     {
         $usuario = Usuario::with('empresa')->find(JWTAuth::parseToken()->authenticate()->id);
 
-        return response()->json($usuario);
+        return response()->json($usuario->empresa);
     }
 
     public function obtener()

@@ -42,8 +42,12 @@ class TitulosDemandanteController extends Controller
     {
         $usuario = JWTAuth::parseToken()->authenticate();
 
-        $titulosDemandante = TituloDemandante::with('titulo')->where('id_demandante', $usuario->id)->get();
+        $demandante = $usuario->load('demandante.titulos.titulo');
 
-        return response()->json($titulosDemandante);
+        if (!$demandante->demandante) {
+            return response()->json(['error' => 'El usuario no tiene un demandante asociado'], 404);
+        }
+
+        return response()->json($demandante->demandante->titulos);
     }
 }
