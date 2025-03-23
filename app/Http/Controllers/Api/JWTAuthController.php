@@ -72,7 +72,7 @@ class JWTAuthController extends Controller
             ]);
 
             $empresa = Empresa::create([
-                'id_usuario' => $usuario->id,
+                'id_empresa' => $usuario->id,
                 'cif' => $request->cif,
                 'nombre' => $request->nombre,
                 'localidad' => $request->localidad,

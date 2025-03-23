@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('empresas', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('id_usuario')->constrained('usuarios')->onDelete('cascade');
+            $table->unsignedBigInteger('id_empresa')->primary();
+            $table->foreign('id_empresa')->references('id')->on('usuarios')->onDelete('cascade');
             $table->tinyInteger('validado');
             $table->string('cif', 11)->unique();
             $table->string('nombre', 45);

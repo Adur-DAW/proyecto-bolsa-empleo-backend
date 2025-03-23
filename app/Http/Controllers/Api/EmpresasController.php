@@ -22,7 +22,7 @@ class EmpresasController extends Controller
         ]);
 
         $empresa = Empresa::create([
-            'id_usuario' => $usuario->id,
+            'id_empresa' => $usuario->id,
             'cif' => $request->cif,
             'nombre' => $request->nombre,
             'localidad' => $request->localidad,
@@ -47,7 +47,7 @@ class EmpresasController extends Controller
             'telefono' => 'required|string|size:9'
         ]);
 
-        $empresa = Empresa::where('id_usuario', $usuario->id)->first();
+        $empresa = Empresa::where('id_empresa', $usuario->id)->first();
 
         $empresa->update([
             'cif' => $request->cif,

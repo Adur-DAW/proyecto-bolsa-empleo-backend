@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OfertasController;
 use App\Http\Controllers\Api\TitulosController;
 use App\Http\Controllers\Api\TitulosDemandanteController;
+use App\Http\Controllers\Api\TitulosOfertaController;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
@@ -34,5 +35,13 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::put('empresas', [EmpresasController::class, 'actualizar']);
 
     Route::post('ofertas', [OfertasController::class, 'registrar']);
+    Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
+    Route::put('ofertas/{id}', [OfertasController::class, 'actualizar']);
+    Route::delete('ofertas/{id}', [OfertasController::class, 'eliminar']);
+    Route::get('ofertas/{id}/titulos', [TitulosOfertaController::class, 'obtenerTitulosPorIdOferta']);
+    Route::post('ofertas/titulos', [TitulosOfertaController::class, 'registrar']);
+    Route::delete('ofertas/{id_oferta}/titulos/{id_titulo}', [TitulosOfertaController::class, 'eliminar']);
+
     Route::post('titulos', [TitulosController::class, 'registrar']);
+    Route::get('titulos/{id}/ofertas', [TitulosOfertaController::class, 'obtenerOfertasPorIdTitulo']);
 });

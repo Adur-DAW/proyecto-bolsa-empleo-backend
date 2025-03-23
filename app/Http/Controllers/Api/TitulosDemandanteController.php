@@ -51,7 +51,7 @@ class TitulosDemandanteController extends Controller
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $titulosDemandante = TituloDemandante::where('id_demandante', $usuario->id)->with('titulo')->get();
+        $titulosDemandante = TituloDemandante::where('id_demandante', $usuario->id)->with('titulo')->orderBy('año', 'desc')->get();
 
         return response()->json($titulosDemandante);
     }

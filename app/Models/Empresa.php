@@ -18,7 +18,7 @@ class Empresa extends Model
      *
      * @var string
      */
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_empresa';
 
     /**
      * The attributes that are mass assignable.
@@ -36,6 +36,6 @@ class Empresa extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'id_empresa', 'id');
     }
 }

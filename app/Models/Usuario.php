@@ -73,10 +73,9 @@ class Usuario extends Authenticatable implements JWTSubject
         ];
     }
 
-
     public function empresa()
     {
-        return $this->hasOne(Empresa::class, 'id_usuario');
+        return $this->hasOne(Empresa::class, 'id_empresa', 'id');
     }
 
     public function demandante()
