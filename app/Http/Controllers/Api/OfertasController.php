@@ -25,8 +25,7 @@ class OfertasController extends Controller
             'horario' => 'required|string|max:45',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
-            'fecha_cierre' => 'required|date',
-            'id_empresa' => 'required|int'
+            'fecha_cierre' => 'required|date'
         ]);
 
         $oferta = Oferta::create([
@@ -38,7 +37,7 @@ class OfertasController extends Controller
             'obs' => $request->obs ?? '',
             'abierta' => $request->abierta,
             'fecha_cierre' => $request->fecha_cierre,
-            'id_empresa' => $request->id_empresa
+            'id_empresa' => $usuario->id
         ]);
 
         return response()->json([
@@ -65,7 +64,7 @@ class OfertasController extends Controller
         return response()->json($oferta);
     }
 
-    public function actualizar(Request $request)
+    public function actualizar(Request $request, int $id)
     {
         $usuario = JWTAuth::parseToken()->authenticate();
 
@@ -73,13 +72,15 @@ class OfertasController extends Controller
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $oferta = Oferta::find($request->id);
+        $oferta = Oferta::find($id);
+        if (!$oferta) {
+            return response()->json(['error' => 'Oferta no encontrada'], 404);
+        }
         if ($usuario->id !== $oferta->id_empresa) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
         $request->validate([
-            'id' => 'required|int',
             'nombre' => 'required|string|max:45',
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
@@ -89,12 +90,6 @@ class OfertasController extends Controller
             'abierta' => 'required|boolean',
             'fecha_cierre' => 'required|date'
         ]);
-
-        $oferta = Oferta::find($request->id);
-
-        if (!$oferta) {
-            return response()->json(['error' => 'Oferta no encontrada'], 404);
-        }
 
         $oferta->update([
             'nombre' => $request->nombre,

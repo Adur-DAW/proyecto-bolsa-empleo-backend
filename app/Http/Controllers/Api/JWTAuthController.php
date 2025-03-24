@@ -12,94 +12,98 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class JWTAuthController extends Controller
 {
     public function registrar(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'email' => 'required|string|email|max:255|unique:usuarios',
-        'password' => 'required|string|min:6|confirmed',
-        'password_confirmation' => 'required|string|min:6',
-        'rol' => 'required|string|in:demandante,empresa'
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json($validator->errors()->toJson(), 400);
-    }
-
-    DB::beginTransaction();
-
-    try
     {
+        $reglas = [
+            'email' => 'required|string|email|max:255|unique:usuarios',
+            'password' => 'required|string|min:6|confirmed',
+            'password_confirmation' => 'required|string|min:6',
+            'rol' => 'required|string|in:demandante,empresa'
+        ];
+
+        if ($request->rol === 'demandante') {
+            $reglas = array_merge($reglas, [
+                'dni' => 'required|string|size:9|unique:demandantes,dni',
+                'nombre' => 'required|string|max:45',
+                'apellido1' => 'required|string|max:45',
+                'apellido2' => 'nullable|string|max:45',
+                'telefono_movil' => 'required|string|size:9',
+                'email' => 'required|string|email|max:45|unique:demandantes,email',
+                'situacion' => 'required|integer|min:0|max:1',
+            ]);
+        } elseif ($request->rol === 'empresa') {
+            $reglas = array_merge($reglas, [
+                'cif' => 'required|string|size:9|unique:empresas,cif',
+                'nombre' => 'required|string|max:45',
+                'localidad' => 'required|string|max:45',
+                'telefono' => 'required|string|size:9',
+            ]);
+        }
+
+        $request->validate($reglas);
+
+        DB::beginTransaction();
+
         $usuario = Usuario::create([
             'email' => $request->get('email'),
             'password' => Hash::make($request->get('password')),
             'rol' => $request->get('rol')
         ]);
 
-        if ($usuario->rol == 'demandante') {
-            $request->validate([
-                'dni' => 'required|string|size:9|unique:demandantes,dni',
-                'nombre' => 'required|string|max:45',
-                'apellido1' => 'required|string|max:45',
-                'apellido2' => 'nullable|string|max:45',
-                'telefono_movil' => 'required|string|size:9',
-                'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')],
-                'situacion' => 'required|integer|min:0|max:1',
-            ]);
+        try {
+            if ($usuario->rol == 'demandante') {
+                $demandante = Demandante::create([
+                    'id_demandante' => $usuario->id,
+                    'dni' => $request->dni,
+                    'nombre' => $request->nombre,
+                    'apellido1' => $request->apellido1,
+                    'apellido2' => $request->apellido2 ?? '',
+                    'telefono_movil' => $request->telefono_movil,
+                    'email' => $request->email,
+                    'situacion' => $request->situacion,
+                ]);
 
-            $demandante = Demandante::create([
-                'id_demandante' => $usuario->id,
-                'dni' => $request->dni,
-                'nombre' => $request->nombre,
-                'apellido1' => $request->apellido1,
-                'apellido2' => $request->apellido2 ?? '',
-                'telefono_movil' => $request->telefono_movil,
-                'email' => $request->email,
-                'situacion' => $request->situacion,
-            ]);
+                $usuario->demandante = $demandante;
+            } elseif ($usuario->rol == 'empresa') {
+                $empresa = Empresa::create([
+                    'id_empresa' => $usuario->id,
+                    'cif' => $request->cif,
+                    'nombre' => $request->nombre,
+                    'localidad' => $request->localidad,
+                    'telefono' => $request->telefono,
+                    'validado' => false
+                ]);
 
-            $usuario->demandante = $demandante;
+                $usuario->empresa = $empresa;
+            }
+
+            DB::commit();
+
+            $token = JWTAuth::fromUser($usuario);
+
+            return response()->json(compact('usuario', 'token'), 201);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+
+            if (isset($usuario)) {
+                $usuario->delete();
+            }
+
+            return response()->json($e->errors(), 400);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (isset($usuario)) {
+                $usuario->delete();
+            }
+
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-        elseif ($usuario->rol == 'empresa') {
-            $request->validate([
-                'cif' => 'required|string|size:9|unique:empresas,cif',
-                'nombre' => 'required|string|max:45',
-                'localidad' => 'required|string|max:45',
-                'telefono' => 'required|string|size:9'
-            ]);
-
-            $empresa = Empresa::create([
-                'id_empresa' => $usuario->id,
-                'cif' => $request->cif,
-                'nombre' => $request->nombre,
-                'localidad' => $request->localidad,
-                'telefono' => $request->telefono,
-                'validado' => false
-            ]);
-
-            $usuario->empresa = $empresa;
-        }
-
-        DB::commit();
-
-        $token = JWTAuth::fromUser($usuario);
-
-        return response()->json(compact('usuario', 'token'), 201);
     }
-    catch (\Exception $e)
-    {
-        DB::rollBack();
-
-        if (isset($usuario)) {
-            $usuario->delete();
-        }
-
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
 
     public function login(Request $request)
     {
@@ -118,13 +122,10 @@ class JWTAuthController extends Controller
             'nombreCompleto' => 'Sin especificar'
         ];
 
-        if ($usuarioAuth->rol == 'demandante')
-        {
+        if ($usuarioAuth->rol == 'demandante') {
             $usuarioAuth->load('demandante');
             $usuario['nombreCompleto'] = $usuarioAuth->demandante->nombre ?? 'Sin nombre';
-        }
-        elseif ($usuarioAuth->rol == 'empresa')
-        {
+        } elseif ($usuarioAuth->rol == 'empresa') {
             $usuarioAuth->load('empresa');
 
             if ($usuarioAuth->empresa->validado == false) {
@@ -132,13 +133,10 @@ class JWTAuthController extends Controller
             }
 
             $usuario['nombreCompleto'] = $usuarioAuth->empresa->nombre ?? 'Sin nombre';
-        }
-        else
-        {
+        } else {
             if ($usuarioAuth->rol == 'centro') {
                 $usuario['nombreCompleto'] = 'Administrador';
-            }
-            else {
+            } else {
                 return response()->json(['error' => 'El usuario no tiene ROL'], 403);
             }
         }
