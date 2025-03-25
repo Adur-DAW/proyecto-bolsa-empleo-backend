@@ -41,4 +41,15 @@ class Oferta extends Model
     {
         return $this->belongsTo(Empresa::class, 'id_empresa');
     }
+
+    public function titulos() {
+        return $this->belongsToMany(Titulo::class, 'titulos_oferta', 'id_oferta', 'id_titulo');
+    }
+
+    public function demandantes()
+    {
+        return $this->belongsToMany(Demandante::class, 'demandantes_oferta', 'id_oferta', 'id_demandante')
+                    ->withPivot('adjudicada', 'fecha')
+                    ->withTimestamps();
+    }
 }

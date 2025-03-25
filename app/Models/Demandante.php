@@ -45,4 +45,12 @@ class Demandante extends Model
     {
         return $this->hasMany(TituloDemandante::class, 'id_demandante');
     }
+
+
+    public function ofertas()
+    {
+        return $this->belongsToMany(Oferta::class, 'demandantes_oferta', 'id_demandante', 'id_oferta')
+                    ->withPivot('adjudicada', 'fecha')
+                    ->withTimestamps();
+    }
 }

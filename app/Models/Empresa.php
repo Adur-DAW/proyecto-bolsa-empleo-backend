@@ -26,7 +26,7 @@ class Empresa extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'id_usuario',
+        'id_empresa',
         'validado',
         'cif',
         'nombre',

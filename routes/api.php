@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\OfertasController;
 use App\Http\Controllers\Api\TitulosController;
 use App\Http\Controllers\Api\TitulosDemandanteController;
 use App\Http\Controllers\Api\TitulosOfertaController;
+use App\Http\Controllers\Api\DemandantesOfertaController;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
@@ -38,10 +39,23 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
     Route::put('ofertas/{id}', [OfertasController::class, 'actualizar']);
     Route::delete('ofertas/{id}', [OfertasController::class, 'eliminar']);
+    Route::delete('ofertas/{id_oferta}/titulos/{id_titulo}', [TitulosOfertaController::class, 'eliminar']);
+    Route::get('ofertas/{id}/demandantes', [OfertasController::class, 'obtenerDemandantesPorIdOferta']);
+    Route::post('ofertas/{id}/demandantes', [OfertasController::class, 'registrarDemandante']);
+    Route::delete('ofertas/{id_oferta}/demandantes/{id_demandante}', [OfertasController::class, 'eliminarDemandante']);
+    Route::get('demandantes/jwt/ofertas-por-titulos', [OfertasController::class, 'obtenerPorTitulosDemandanteJWT']);
+    Route::get('empresas/jwt/ofertas', [OfertasController::class, 'obtenerPorEmpresaJWT']);
+
     Route::get('ofertas/{id}/titulos', [TitulosOfertaController::class, 'obtenerTitulosPorIdOferta']);
     Route::post('ofertas/titulos', [TitulosOfertaController::class, 'registrar']);
-    Route::delete('ofertas/{id_oferta}/titulos/{id_titulo}', [TitulosOfertaController::class, 'eliminar']);
 
     Route::post('titulos', [TitulosController::class, 'registrar']);
     Route::get('titulos/{id}/ofertas', [TitulosOfertaController::class, 'obtenerOfertasPorIdTitulo']);
+
+    Route::get('demandantes/jwt/ofertas', [DemandantesOfertaController::class, 'obtenerOfertasJWT']);
+    Route::get('ofertas/{id}/demandantes', [DemandantesOfertaController::class, 'obtenerDemandantesPorIdOferta']);
+    Route::post('ofertas/{id}/demandantes/jwt', [DemandantesOfertaController::class, 'registrarJWT']);
+    Route::post('ofertas/{id}/demandantes', [DemandantesOfertaController::class, 'registrarDemandante']);
+    Route::delete('ofertas/{id_oferta}/demandantes/jwt', [DemandantesOfertaController::class, 'eliminarJWT']);
+    Route::delete('ofertas/{id_oferta}/demandantes/{id_demandante}', [DemandantesOfertaController::class, 'eliminarDemandante']);
 });
