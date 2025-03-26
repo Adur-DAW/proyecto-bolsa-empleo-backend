@@ -47,27 +47,32 @@ class OfertasController extends Controller
     }
 
     public function obtener()
-{
-    try {
-        $usuario = JWTAuth::parseToken()->authenticate();
-    } catch (\Exception) {
-        return response()->json(Oferta::with('empresa')->get());
-    }
+    {
+        try {
+            $usuario = JWTAuth::parseToken()->authenticate();
+        } catch (\Exception) {
+            return response()->json(Oferta::with('empresa')->get());
+        }
 
-    $ofertas = Oferta::with('empresa')->get();
+        $ofertas = Oferta::with('empresa')->get();
 
-    if ($usuario->rol === 'demandante') {
-        $ofertas->each(function ($oferta) use ($usuario) {
-            $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
+        $ofertas->each(function ($oferta) {
+            $oferta->demandantes_inscritos = $oferta->demandantes->count();
         });
-    }
 
-    return response()->json($ofertas);
-}
+        if ($usuario->rol === 'demandante') {
+            $ofertas->each(function ($oferta) use ($usuario) {
+                $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
+            });
+        }
+
+        return response()->json($ofertas);
+    }
 
     public function obtenerPorId($id)
     {
         $oferta = Oferta::with('empresa')->find($id);
+        $oferta->demandantes_inscritos = $oferta->demandantes->count();
 
         if (!$oferta) {
             return response()->json(['error' => 'Oferta no encontrada'], 404);
@@ -86,10 +91,15 @@ class OfertasController extends Controller
 
         $ofertas = Oferta::with('empresa')->where('id_empresa', $usuario->id)->get();
 
+        $ofertas->each(function ($oferta) {
+            $oferta->demandantes_inscritos = $oferta->demandantes->count();
+        });
+
         return response()->json($ofertas);
     }
 
-    public function obtenerPorTitulosDemandanteJWT() {
+    public function obtenerPorTitulosDemandanteJWT()
+    {
         $usuario = JWTAuth::parseToken()->authenticate();
 
         if ($usuario->rol !== 'demandante') {
@@ -106,6 +116,10 @@ class OfertasController extends Controller
 
         $ofertas->each(function ($oferta) use ($usuario) {
             $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
+        });
+
+        $ofertas->each(function ($oferta) {
+            $oferta->demandantes_inscritos = $oferta->demandantes->count();
         });
 
         return response()->json($ofertas);
@@ -176,5 +190,4 @@ class OfertasController extends Controller
 
         return response()->json(['message' => 'Oferta eliminada con éxito']);
     }
-
 }

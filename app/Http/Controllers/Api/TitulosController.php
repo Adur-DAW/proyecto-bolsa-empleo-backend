@@ -37,4 +37,31 @@ class TitulosController extends Controller
 
         return response()->json($titulos);
     }
+
+    public function obtenerExtra()
+    {
+        $titulos = Titulo::withCount('demandantes', 'ofertas')->get();
+
+        return response()->json($titulos);
+    }
+
+    public function eliminar($id)
+    {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol !== 'centro') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $titulo = Titulo::find($id);
+        if (!$titulo) {
+            return response()->json(['error' => 'Titulo no encontrado'], 404);
+        }
+
+        $titulo->delete();
+
+        return response()->json([
+            'message' => 'Titulo eliminado con éxito'
+        ]);
+    }
 }

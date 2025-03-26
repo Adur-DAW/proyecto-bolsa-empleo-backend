@@ -28,4 +28,14 @@ class Titulo extends Model
     protected $fillable = [
         'nombre',
     ];
+
+    public function demandantes()
+    {
+        return $this->belongsToMany(Demandante::class, 'titulos_demandante', 'id_titulo', 'id_demandante');
+    }
+
+    public function ofertas()
+    {
+        return $this->belongsToMany(Oferta::class, 'titulos_oferta', 'id_titulo', 'id_oferta');
+    }
 }

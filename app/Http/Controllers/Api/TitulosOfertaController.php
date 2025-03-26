@@ -56,15 +56,6 @@ class TitulosOfertaController extends Controller
         return response()->json($titulosOferta);
     }
 
-    public function obtenerOfertasPorIdTitulo($id)
-    {
-        $titulosOferta = TituloOferta::where('id_titulo', $id)
-            ->with('oferta')
-            ->get();
-
-        return response()->json($titulosOferta);
-    }
-
     public function eliminar($id_oferta, $id_titulo)
     {
         $usuario = JWTAuth::parseToken()->authenticate();
