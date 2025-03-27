@@ -17,6 +17,7 @@ Route::post('login', [JWTAuthController::class, 'login']);
 Route::get('empresas', [EmpresasController::class, 'obtener']);
 Route::get('demandantes', [DemandantesController::class, 'obtener']);
 Route::get('ofertas', [OfertasController::class, 'obtener']);
+Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
 Route::get('titulos', [TitulosController::class, 'obtener']);
 Route::get('titulos/extra', [TitulosController::class, 'obtenerExtra']);
 Route::get('refrescar', [JWTAuthController::class, 'refrescarToken']);
@@ -54,8 +55,6 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
     // Registrar oferta
     Route::post('ofertas', [OfertasController::class, 'registrar']);
-    // Obtener oferta por ID
-    Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
     // Actualizar oferta
     Route::put('ofertas/{id}', [OfertasController::class, 'actualizar']);
     // Eliminar oferta

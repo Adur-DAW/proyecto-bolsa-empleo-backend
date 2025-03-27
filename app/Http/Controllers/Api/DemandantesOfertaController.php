@@ -103,7 +103,17 @@ class DemandantesOfertaController extends Controller
 
         $demandantes = Demandante::whereHas('ofertas', function ($query) use ($id_oferta) {
             $query->where('id_oferta', $id_oferta);
-        })->get();
+        })->with('titulos.titulo')->get();
+
+        $demandantes = $demandantes->map(function ($demandante) use ($id_oferta) {
+            $demandante->adjudicado = $demandante->ofertas()
+                ->where('id_oferta', $id_oferta)
+                ->first()
+                ->pivot
+                ->adjudicada;
+
+            return $demandante;
+        });
 
         return response()->json($demandantes);
     }
@@ -118,14 +128,19 @@ class DemandantesOfertaController extends Controller
 
         $titulos = Titulo::whereHas('ofertas', function ($query) use ($id_oferta) {
             $query->where('id_oferta', $id_oferta);
-        })->get();
+        })->pluck('id');
 
         $demandantes = Demandante::whereHas('titulos', function ($query) use ($titulos) {
-            $query->whereIn('id_titulo', $titulos->pluck('id'));
-        })->get();
+            $query->whereIn('id_titulo', $titulos);
+        })->whereDoesntHave('ofertas', function ($query) use ($id_oferta) {
+            $query->where('id_oferta', $id_oferta);
+        })->with('titulos.titulo')->get();
 
-        $demandantes = $demandantes->filter(function ($demandante) use ($id_oferta) {
-            return !$demandante->ofertas->contains('id', $id_oferta);
+        $demandantes = $demandantes->map(function ($demandante) use ($id_oferta) {
+            $oferta = $demandante->ofertas()->where('id_oferta', $id_oferta)->first();
+            $demandante->adjudicado = $oferta ? $oferta->pivot->adjudicada : false;
+
+            return $demandante;
         });
 
         return response()->json($demandantes);
