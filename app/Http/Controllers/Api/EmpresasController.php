@@ -75,4 +75,25 @@ class EmpresasController extends Controller
 
         return response()->json($empresas);
     }
+
+    public function validar(Request $request, $id) {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol !== 'centro') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $empresa = Empresa::where('id_empresa', $id)->first();
+        if (!$empresa) {
+            return response()->json(['error' => 'Empresa no encontrada'], 404);
+        }
+
+        $empresa->validado = true;
+        $empresa->save();
+
+        return response()->json([
+            'message' => 'Empresa validada con éxito',
+            'empresa' => $empresa
+        ]);
+    }
 }

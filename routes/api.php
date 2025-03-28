@@ -54,6 +54,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('empresas/jwt', [EmpresasController::class, 'obtenerJWT']);
     // Actualizar empresa autenticada
     Route::put('empresas', [EmpresasController::class, 'actualizar']);
+    // Validar empresa
+    Route::put('empresas/{id}/validar', [EmpresasController::class, 'validar']);
 
     // Registrar oferta
     Route::post('ofertas', [OfertasController::class, 'registrar']);
