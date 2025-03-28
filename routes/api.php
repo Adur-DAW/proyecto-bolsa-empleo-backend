@@ -56,6 +56,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::put('empresas', [EmpresasController::class, 'actualizar']);
     // Validar empresa
     Route::put('empresas/{id}/validar', [EmpresasController::class, 'validar']);
+    // Eliminar empresa
+    Route::delete('empresas/{id}', [EmpresasController::class, 'eliminar']);
 
     // Registrar oferta
     Route::post('ofertas', [OfertasController::class, 'registrar']);

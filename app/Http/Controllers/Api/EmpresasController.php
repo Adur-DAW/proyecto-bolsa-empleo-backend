@@ -71,7 +71,19 @@ class EmpresasController extends Controller
 
     public function obtener()
     {
-        $empresas = Empresa::all();
+        try {
+            $usuario = JWTAuth::parseToken()->authenticate();
+        } catch (\Exception) {
+            return Empresa::where('validado', true)->get();
+        }
+
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol === 'centro') {
+            $empresas = Empresa::orderBy('validado', 'asc')->get();
+        } else {
+            $empresas = Empresa::where('validado', true)->get();
+        }
 
         return response()->json($empresas);
     }
@@ -94,6 +106,26 @@ class EmpresasController extends Controller
         return response()->json([
             'message' => 'Empresa validada con éxito',
             'empresa' => $empresa
+        ]);
+    }
+
+    public function eliminar($id)
+    {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol !== 'centro') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $empresa = Empresa::where('id_empresa', $id)->first();
+        if (!$empresa) {
+            return response()->json(['error' => 'Empresa no encontrada'], 404);
+        }
+
+        $empresa->delete();
+
+        return response()->json([
+            'message' => 'Empresa eliminada con éxito'
         ]);
     }
 }
