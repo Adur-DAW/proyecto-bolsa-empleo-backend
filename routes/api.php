@@ -36,6 +36,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
     // Registrar títulos
     Route::post('titulos', [TitulosController::class, 'registrar']);
+    // Actualizar titulo
+    Route::put('titulos/{id}', [TitulosController::class, 'actualizar']);
     // Eliminar títulos
     Route::delete('titulos/{id}', [TitulosController::class, 'eliminar']);
 

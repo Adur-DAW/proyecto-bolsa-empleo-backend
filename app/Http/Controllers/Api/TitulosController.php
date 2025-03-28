@@ -45,6 +45,34 @@ class TitulosController extends Controller
         return response()->json($titulos);
     }
 
+    public function actualizar(Request $request, $id)
+    {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol !== 'centro') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $titulo = Titulo::find($id);
+        if (!$titulo) {
+            return response()->json(['error' => 'Titulo no encontrado'], 404);
+        }
+
+        $request->validate([
+            'nombre' => 'required|string|max:45|unique:titulos,nombre,' . $titulo->id
+        ]);
+
+        $titulo->update([
+            'nombre' => $request->nombre
+        ]);
+
+        return response()->json([
+            'message' => 'Titulo actualizado con éxito',
+            'titulo' => $titulo
+        ]);
+    }
+
+
     public function eliminar($id)
     {
         $usuario = JWTAuth::parseToken()->authenticate();
@@ -56,6 +84,10 @@ class TitulosController extends Controller
         $titulo = Titulo::find($id);
         if (!$titulo) {
             return response()->json(['error' => 'Titulo no encontrado'], 404);
+        }
+
+        if ($titulo->demandantes()->exists() || $titulo->ofertas()->exists()) {
+            return response()->json(['error' => 'No se puede eliminar el título porque está asociado a demandantes u ofertas'], 400);
         }
 
         $titulo->delete();
