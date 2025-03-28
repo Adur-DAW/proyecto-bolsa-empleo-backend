@@ -71,11 +71,21 @@ class OfertasController extends Controller
 
     public function obtenerPorId($id)
     {
+        try {
+            $usuario = JWTAuth::parseToken()->authenticate();
+        } catch (\Exception) {
+            return response()->json(Oferta::with('empresa')->get());
+        }
+
         $oferta = Oferta::with('empresa')->find($id);
         $oferta->demandantes_inscritos = $oferta->demandantes->count();
 
         if (!$oferta) {
             return response()->json(['error' => 'Oferta no encontrada'], 404);
+        }
+
+        if ($usuario->rol === 'demandante') {
+            $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
         }
 
         return response()->json($oferta);
