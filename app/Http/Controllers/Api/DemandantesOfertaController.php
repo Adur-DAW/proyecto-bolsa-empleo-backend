@@ -10,7 +10,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class DemandantesOfertaController extends Controller
 {
-    public function registrarJWT(Request $request, $id) {
+    public function registrarJWT(Request $request) {
         $usuario = JWTAuth::parseToken()->authenticate();
 
         if ($usuario->rol !== 'demandante') {
@@ -22,12 +22,12 @@ class DemandantesOfertaController extends Controller
             return response()->json(['error' => 'No se ha encontrado el demandante'], 404);
         }
 
-        $inscrito = $demandante->ofertas()->where('id_oferta', $id)->first();
+        $inscrito = $demandante->ofertas()->where('id_oferta', $request->id_oferta)->first();
         if ($inscrito) {
             return response()->json(['error' => 'Ya está inscrito en la oferta'], 400);
         }
 
-        $demandante->ofertas()->attach($id, [
+        $demandante->ofertas()->attach($request->id_oferta, [
             'adjudicada' => false,
             'fecha' => now()
         ]);
@@ -114,6 +114,8 @@ class DemandantesOfertaController extends Controller
 
             return $demandante;
         });
+
+        $demandantes = $demandantes->sortByDesc('adjudicado')->values();
 
         return response()->json($demandantes);
     }

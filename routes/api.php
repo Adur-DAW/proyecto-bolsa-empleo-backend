@@ -85,9 +85,9 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     // Obtener ofertas por demandante autenticado
     Route::get('demandantes/jwt/ofertas', [DemandantesOfertaController::class, 'obtenerOfertasJWT']);
     // Inscribirse a una oferta por demandante autenticado
-    Route::post('ofertas/{id}/demandantes/jwt', [DemandantesOfertaController::class, 'registrarJWT']);
+    Route::post('demandantes/jwt/ofertas', [DemandantesOfertaController::class, 'registrarJWT']);
     // Eliminar inscripción a una oferta por demandante autenticado
-    Route::delete('ofertas/{id}/demandantes/jwt', [DemandantesOfertaController::class, 'eliminarJWT']);
+    Route::delete('demandantes/jwt/ofertas/{id_oferta}', [DemandantesOfertaController::class, 'eliminarJWT']);
 
     // Obtener demandantes por ID de oferta
     Route::get('ofertas/{id}/demandantes', [DemandantesOfertaController::class, 'obtenerDemandantesPorIdOferta']);
@@ -96,7 +96,9 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     // Obtener demandantes por oferta que contengan los títulos de la oferta
     Route::get('ofertas/{id}/demandantes/posibles', [DemandantesOfertaController::class, 'obtenerDemandantesContieneTitulacionPorIdOferta']);
     // Adjudicar oferta a demandante
-    Route::put('ofertas/{id_oferta}/demandantes/{id_demandante}/adjudicar', [DemandantesOfertaController::class, 'adjudicar']);
+    Route::put('ofertas/{id_oferta}/demandantes/{id_demandante}/adjudicar', [DemandantesOfertaController::class, 'adjudicarOferta']);
+    // Inscribir y adjudicar oferta a demandante
+    Route::post('ofertas/demandantes', [DemandantesOfertaController::class, 'registrarDemandanteYAdjudicar']);
     // Eliminar demandante de una oferta
     Route::delete('ofertas/{id_oferta}/demandantes/{id_demandante}', [DemandantesOfertaController::class, 'eliminarDemandante']);
 });
