@@ -18,6 +18,7 @@ Route::get('empresas', [EmpresasController::class, 'obtener']);
 Route::get('demandantes', [DemandantesController::class, 'obtener']);
 Route::get('ofertas', [OfertasController::class, 'obtener']);
 Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
+Route::get('ofertas/{id}/titulos', [TitulosOfertaController::class, 'obtenerTitulosPorIdOferta']);
 Route::get('titulos', [TitulosController::class, 'obtener']);
 Route::get('titulos/extra', [TitulosController::class, 'obtenerExtra']);
 Route::get('refrescar', [JWTAuthController::class, 'refrescarToken']);
@@ -75,8 +76,6 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('demandantes/jwt/ofertas-por-titulos', [OfertasController::class, 'obtenerPorTitulosDemandanteJWT']);
 
 
-    // Obtener títulos de una oferta
-    Route::get('ofertas/{id}/titulos', [TitulosOfertaController::class, 'obtenerTitulosPorIdOferta']);
     // Registrar títulos de una oferta
     Route::post('ofertas/titulos', [TitulosOfertaController::class, 'registrar']);
     // Eliminar títulos de una oferta
