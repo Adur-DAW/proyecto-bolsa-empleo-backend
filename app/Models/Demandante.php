@@ -21,6 +21,13 @@ class Demandante extends Model
     protected $primaryKey = 'id_demandante';
 
     /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

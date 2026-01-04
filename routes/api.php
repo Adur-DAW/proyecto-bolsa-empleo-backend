@@ -30,7 +30,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('usuarios/jwt', [JWTAuthController::class, 'obtenerUsuarioJWT']);
     
     // Admin stats
-    Route::get('admin/stats', [AdminController::class, 'getStats']);
+    Route::get('admin/stats', [AdminController::class, 'obtenerEstadisticas']);
 
     // Cerrar sesión
     Route::post('cerrar-sesion', [JWTAuthController::class, 'cerrarSesion']);

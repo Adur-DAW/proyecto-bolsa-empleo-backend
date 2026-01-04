@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_demandante');
             $table->unsignedBigInteger('id_titulo');
             $table->foreign('id_demandante')->references('id_demandante')->on('demandantes')->onDelete('cascade');
-            $table->foreign('id_titulo')->references('id_titulo')->on('titulos')->onDelete('cascade');
+            $table->foreign('id_titulo')->references('id')->on('titulos')->onDelete('cascade');
             $table->string('centro', 45)->nullable();
             $table->string('año', 45)->nullable();
             $table->boolean('cursando')->default(false);

@@ -21,6 +21,13 @@ class Empresa extends Model
     protected $primaryKey = 'id_empresa';
 
     /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
