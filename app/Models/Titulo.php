@@ -27,6 +27,7 @@ class Titulo extends Model
      */
     protected $fillable = [
         'nombre',
+        'familia_profesional'
     ];
 
     public function demandantes()

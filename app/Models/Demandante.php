@@ -27,12 +27,14 @@ class Demandante extends Model
      */
     protected $fillable = [
         'id_demandante',
-        'email',
         'dni',
         'nombre',
         'apellido1',
         'apellido2',
         'telefono_movil',
+        'email',
+        'familia_profesional',
+        'cv_path',
         'situacion'
     ];
 

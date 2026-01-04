@@ -9,7 +9,8 @@ use App\Http\Controllers\Api\OfertasController;
 use App\Http\Controllers\Api\TitulosController;
 use App\Http\Controllers\Api\TitulosDemandanteController;
 use App\Http\Controllers\Api\TitulosOfertaController;
-    use App\Http\Controllers\Api\DemandantesOfertaController;
+use App\Http\Controllers\Api\DemandantesOfertaController;
+use App\Http\Controllers\Api\AdminController;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
@@ -27,6 +28,10 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
     // Obtener usuario autenticado
     Route::get('usuarios/jwt', [JWTAuthController::class, 'obtenerUsuarioJWT']);
+    
+    // Admin stats
+    Route::get('admin/stats', [AdminController::class, 'getStats']);
+
     // Cerrar sesión
     Route::post('cerrar-sesion', [JWTAuthController::class, 'cerrarSesion']);
 

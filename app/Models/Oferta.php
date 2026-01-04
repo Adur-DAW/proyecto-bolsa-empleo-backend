@@ -31,6 +31,7 @@ class Oferta extends Model
         'numero_puestos',
         'tipo_contrato',
         'horario',
+        'dias_descanso',
         'obs',
         'abierta',
         'fecha_cierre',

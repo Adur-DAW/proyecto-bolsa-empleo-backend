@@ -34,6 +34,8 @@ class JWTAuthController extends Controller
                 'telefono_movil' => 'required|string|size:9',
                 'email' => 'required|string|email|max:45|unique:demandantes,email',
                 'situacion' => 'required|integer|min:0|max:1',
+                'familia_profesional' => 'nullable|string|max:100',
+                'cv' => 'nullable|file|mimes:pdf|max:2048'
             ]);
         } elseif ($request->rol === 'empresa') {
             $reglas = array_merge($reglas, [
@@ -41,6 +43,7 @@ class JWTAuthController extends Controller
                 'nombre' => 'required|string|max:45',
                 'localidad' => 'required|string|max:45',
                 'telefono' => 'required|string|size:9',
+                'familia_profesional' => 'nullable|string|max:100',
             ]);
         }
 
@@ -57,6 +60,11 @@ class JWTAuthController extends Controller
         try {
             if ($usuario->rol == 'demandante')
             {
+                $cvPath = null;
+                if ($request->hasFile('cv')) {
+                    $cvPath = $request->file('cv')->store('curriculums', 'public');
+                }
+
                 $demandante = Demandante::create([
                     'id_demandante' => $usuario->id,
                     'dni' => $request->dni,
@@ -66,6 +74,8 @@ class JWTAuthController extends Controller
                     'telefono_movil' => $request->telefono_movil,
                     'email' => $request->email,
                     'situacion' => $request->situacion,
+                    'familia_profesional' => $request->familia_profesional,
+                    'cv_path' => $cvPath
                 ]);
 
                 $usuario->demandante = $demandante;
@@ -78,6 +88,7 @@ class JWTAuthController extends Controller
                     'nombre' => $request->nombre,
                     'localidad' => $request->localidad,
                     'telefono' => $request->telefono,
+                    'familia_profesional' => $request->familia_profesional,
                     'validado' => false
                 ]);
 

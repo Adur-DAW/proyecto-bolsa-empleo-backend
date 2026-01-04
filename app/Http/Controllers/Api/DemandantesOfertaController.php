@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Demandante;
-use App\Models\Titulo;
-use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\Oferta;
+use App\Models\Usuario;
+use App\Mail\NuevaInscripcionMail;
+use App\Mail\OfertaCerradaMail;
+use Illuminate\Support\Facades\Mail;
 
 class DemandantesOfertaController extends Controller
 {
@@ -31,6 +32,19 @@ class DemandantesOfertaController extends Controller
             'adjudicada' => false,
             'fecha' => now()
         ]);
+        
+        // Notificar a la empresa
+        try {
+            $oferta = Oferta::find($request->id_oferta);
+            if ($oferta) {
+                $usuarioEmpresa = Usuario::find($oferta->id_empresa);
+                if ($usuarioEmpresa && $usuarioEmpresa->email) {
+                    Mail::to($usuarioEmpresa->email)->send(new NuevaInscripcionMail($oferta, $demandante));
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignorar error de mail
+        }
 
         return response()->json([
             'message' => 'Se ha inscrito en la oferta correctamente'
@@ -87,6 +101,16 @@ class DemandantesOfertaController extends Controller
             'adjudicada' => true,
             'fecha' => $request->fecha,
         ]);
+        
+        // Notificar al demandante
+        try {
+            $oferta = Oferta::find($request->id_oferta);
+            if ($oferta && $demandante->email) {
+                Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
+            }
+        } catch (\Exception $e) {
+            // Ignorar
+        }
 
         return response()->json([
             'message' => 'Se ha adjudicado a la oferta correctamente'
@@ -161,6 +185,16 @@ class DemandantesOfertaController extends Controller
         $demandante->ofertas()->updateExistingPivot($id_oferta, [
             'adjudicada' => true
         ]);
+        
+        // Notificar al demandante
+        try {
+            $oferta = Oferta::find($id_oferta);
+            if ($oferta && $demandante->email) {
+                Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
+            }
+        } catch (\Exception $e) {
+            // Ignorar
+        }
 
         return response()->json([
             'message' => 'Se ha adjudicado la oferta al demandante'

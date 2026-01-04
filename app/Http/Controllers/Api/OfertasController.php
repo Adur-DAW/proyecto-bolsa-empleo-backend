@@ -7,6 +7,11 @@ use App\Models\Oferta;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
+use App\Models\Demandante;
+use App\Mail\NuevaOfertaMail;
+use App\Mail\OfertaCerradaMail;
+use Illuminate\Support\Facades\Mail;
+
 class OfertasController extends Controller
 {
     public function registrar(Request $request)
@@ -23,6 +28,7 @@ class OfertasController extends Controller
             'numero_puestos' => 'required|int',
             'tipo_contrato' => 'required|string|max:45',
             'horario' => 'required|string|max:45',
+            'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
             'fecha_cierre' => 'required|date'
@@ -34,11 +40,27 @@ class OfertasController extends Controller
             'numero_puestos' => $request->numero_puestos,
             'tipo_contrato' => $request->tipo_contrato,
             'horario' => $request->horario,
+            'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',
             'abierta' => $request->abierta,
             'fecha_cierre' => $request->fecha_cierre,
             'id_empresa' => $usuario->id
         ]);
+        
+        // Enviar email a demandantes de la misma familia profesional
+        try {
+            $empresa = $usuario->empresa;
+            if ($empresa && $empresa->familia_profesional) {
+                $demandantes = Demandante::where('familia_profesional', $empresa->familia_profesional)->get();
+                foreach ($demandantes as $demandante) {
+                    if ($demandante->email) {
+                        Mail::to($demandante->email)->send(new NuevaOfertaMail($oferta));
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // No bloquear la respuesta si falla el mail
+        }
 
         return response()->json([
             'message' => 'Oferta registrada con éxito',
@@ -72,11 +94,12 @@ class OfertasController extends Controller
     public function obtenerPorId($id)
     {
         $oferta = Oferta::with('empresa')->find($id);
-        $oferta->demandantes_inscritos = $oferta->demandantes->count();
-
+        
         if (!$oferta) {
             return response()->json(['error' => 'Oferta no encontrada'], 404);
         }
+        
+        $oferta->demandantes_inscritos = $oferta->demandantes->count();
 
         try {
             $usuario = JWTAuth::parseToken()->authenticate();
@@ -158,10 +181,13 @@ class OfertasController extends Controller
             'numero_puestos' => 'required|int',
             'tipo_contrato' => 'required|string|max:45',
             'horario' => 'required|string|max:45',
+            'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
             'fecha_cierre' => 'required|date'
         ]);
+        
+        $estabaAbierta = $oferta->abierta;
 
         $oferta->update([
             'nombre' => $request->nombre,
@@ -169,10 +195,24 @@ class OfertasController extends Controller
             'numero_puestos' => $request->numero_puestos,
             'tipo_contrato' => $request->tipo_contrato,
             'horario' => $request->horario,
+            'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',
             'abierta' => $request->abierta,
             'fecha_cierre' => $request->fecha_cierre
         ]);
+        
+        // Si se cierra la oferta, notificar a los inscritos
+        try {
+            if ($estabaAbierta && !$oferta->abierta) {
+                foreach ($oferta->demandantes as $inscrito) {
+                    if ($inscrito->email) {
+                         Mail::to($inscrito->email)->send(new OfertaCerradaMail($oferta, 'cerrada'));
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignorar error de mail
+        }
 
         return response()->json([
             'message' => 'Oferta actualizada con éxito',
