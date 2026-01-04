@@ -65,10 +65,10 @@ class AdminController extends Controller
         ];
 
         // --- 2. Evolución Registros ---
-        $registros = $this->obtenerEvolucionRegistros($fechaInicio, $fechaFin, $familia);
+        $registros = $this->obtenerEvolucionRegistros($fechaInicio, $fechaFin, $familia, $peticion->query('agrupacion', 'diario'));
 
         // --- 3. Evolución Ofertas ---
-        $ofertasEvolucion = $this->obtenerEvolucionOfertas($fechaInicio, $fechaFin, $familia);
+        $ofertasEvolucion = $this->obtenerEvolucionOfertas($fechaInicio, $fechaFin, $familia, $peticion->query('agrupacion', 'diario'));
 
         // --- 4. Top Familias ---
         $topFamilias = $this->obtenerTopFamilias($fechaInicio, $fechaFin);
@@ -220,22 +220,30 @@ class AdminController extends Controller
     }
 
     // --- Métodos Existentes Adaptados (Evolución, etc) ---
-    // Se adaptan añadiendo el parámetro $familia y el join correspondiente si aplica
 
-    private function obtenerEvolucionRegistros($inicio, $fin, $familia = null)
+    private function obtenerEvolucionRegistros($inicio, $fin, $familia = null, $agrupacion = 'diario')
     {
-        $formato = '%Y-%m'; 
+        // Determinar campo de agrupación
+        $groupByD = "DATE_FORMAT(created_at, '%Y-%m-%d')"; // Default diario
+        $groupByE = "DATE_FORMAT(created_at, '%Y-%m-%d')";
+        $label = "periodo";
 
-        $queryD = Demandante::select(
-            DB::raw("DATE_FORMAT(created_at, '$formato') as periodo"),
-            DB::raw('count(*) as total')
-        )->groupBy('periodo');
+        if ($agrupacion === 'mensual') {
+            $groupByD = "DATE_FORMAT(created_at, '%Y-%m')";
+            $groupByE = "DATE_FORMAT(created_at, '%Y-%m')";
+        } elseif ($agrupacion === 'familia') {
+            $groupByD = "familia_profesional";
+            $groupByE = "'Sin Familia'"; // Empresas no tienen familia directa en este contexto simple
+        } elseif ($agrupacion === 'localidad') {
+            $groupByD = "'Desconocido'"; // Demandantes no tienen localidad simple
+            $groupByE = "localidad";
+        }
 
-        // Empresas no tienen Familia Profesional en este modelo de datos simple para filtrar, se ignoran o se muestran totales
-        $queryE = Empresa::select(
-            DB::raw("DATE_FORMAT(created_at, '$formato') as periodo"),
-            DB::raw('count(*) as total')
-        )->groupBy('periodo');
+        $queryD = Demandante::select(DB::raw("$groupByD as periodo"), DB::raw('count(*) as total'))
+                    ->groupBy('periodo');
+        
+        $queryE = Empresa::select(DB::raw("$groupByE as periodo"), DB::raw('count(*) as total'))
+                    ->groupBy('periodo');
 
         if ($inicio && $fin) {
             $queryD->whereBetween('created_at', [$inicio, $fin]);
@@ -244,45 +252,73 @@ class AdminController extends Controller
         
         if ($familia) {
             $queryD->where('familia_profesional', $familia);
-            // Empresas no se filtran por familia
         }
 
         $demandantes = $queryD->get()->keyBy('periodo');
-        $empresas = ($familia) ? collect([]) : $queryE->get()->keyBy('periodo'); // Si hay filtro familia, no mostramos empresas
+        $empresas = ($agrupacion === 'familia' || $agrupacion === 'localidad' && $agrupacion !== 'localidad') ? collect([]) : $queryE->get()->keyBy('periodo');
 
-        $fechas = $demandantes->keys()->merge($empresas->keys())->unique()->sort();
+        // Merge keys
+        $allKeys = $demandantes->keys()->merge($empresas->keys())->unique()->sort()->values();
 
         $resultado = [];
-        foreach ($fechas as $fecha) {
+        foreach ($allKeys as $key) {
+            if ($key === 'Sin Familia' || $key === 'Desconocido') continue; // Limpiar datos dummy
             $resultado[] = [
-                'periodo' => $fecha,
-                'demandantes' => $demandantes[$fecha]->total ?? 0,
-                'empresas' => $empresas[$fecha]->total ?? 0,
+                'periodo' => $key,
+                'demandantes' => $demandantes[$key]->total ?? 0,
+                'empresas' => $empresas[$key]->total ?? 0,
             ];
         }
 
         return $resultado;
     }
 
-    private function obtenerEvolucionOfertas($inicio, $fin, $familia = null)
+    private function obtenerEvolucionOfertas($inicio, $fin, $familia = null, $agrupacion = 'diario')
     {
-        $formato = '%Y-%m';
+        $groupBy = "DATE_FORMAT(fecha_publicacion, '%Y-%m-%d')";
+        
+        if ($agrupacion === 'mensual') {
+            $groupBy = "DATE_FORMAT(fecha_publicacion, '%Y-%m')";
+        } elseif ($agrupacion === 'familia') {
+             // Necesitamos join para agrupar ofertas por familia
+             // Esto es complejo porque una oferta tiene titulos y titulos tienen familia.
+             // Asumimos titulos.familia_profesional.
+             // Si agrupamos por familia, necesitamos el join en la base.
+             // Como este helper usa Oferta::select, hacemos el join abajo.
+             $groupBy = "t.familia_profesional";
+        } elseif ($agrupacion === 'localidad') {
+             $groupBy = "e.localidad";
+        }
 
         // Base Query
-        $query = Oferta::select(
-            DB::raw("DATE_FORMAT(fecha_publicacion, '$formato') as periodo"),
-            DB::raw('count(*) as total_publicadas'),
-             DB::raw('sum(case when (select count(*) from demandantes_oferta where demandantes_oferta.id_oferta = ofertas.id and demandantes_oferta.adjudicada = 1) > 0 then 1 else 0 end) as total_adjudicadas')
+        $query = DB::table('ofertas');
+        
+        if ($agrupacion === 'familia') {
+            $query->join('titulos_oferta as to', 'ofertas.id', '=', 'to.id_oferta')
+                  ->join('titulos as t', 'to.id_titulo', '=', 't.id');
+        } elseif ($agrupacion === 'localidad') {
+            $query->join('empresas as e', 'ofertas.id_empresa', '=', 'e.id_empresa');
+        }
+
+        $query->select(
+            DB::raw("$groupBy as periodo"),
+            DB::raw('count(DISTINCT ofertas.id) as total_publicadas'),
+             DB::raw('sum(case when (select count(*) from demandantes_oferta d_o where d_o.id_oferta = ofertas.id and d_o.adjudicada = 1) > 0 then 1 else 0 end) as total_adjudicadas')
         )->groupBy('periodo');
 
         if ($inicio && $fin) {
-            $query->whereBetween('fecha_publicacion', [$inicio, $fin]);
+            $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
         }
         
         if ($familia) {
-             $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
-                   ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
-                   ->where('titulos.familia_profesional', $familia);
+             // Si ya hicimos join arriba, no repetirlo o controlar alias
+             if ($agrupacion !== 'familia') {
+                $query->join('titulos_oferta as to2', 'ofertas.id', '=', 'to2.id_oferta')
+                      ->join('titulos as t2', 'to2.id_titulo', '=', 't2.id')
+                      ->where('t2.familia_profesional', $familia);
+             } else {
+                 $query->where('t.familia_profesional', $familia);
+             }
         }
 
         return $query->get();
