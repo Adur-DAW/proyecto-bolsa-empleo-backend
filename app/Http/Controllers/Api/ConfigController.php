@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ConfigController extends Controller
 {
-    public function index()
+    public function obtenerConfiguracion()
     {
         return response()->json([
             'ofertas_publicas' => config('app.ofertas_publicas'),

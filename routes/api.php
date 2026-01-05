@@ -16,6 +16,7 @@ use App\Http\Middleware\VerificarOfertasPublicas;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
+Route::get('config', [App\Http\Controllers\Api\ConfigController::class, 'obtenerConfiguracion']);
 
 Route::get('empresas', [EmpresasController::class, 'obtener']);
 Route::get('empresas/{id}', [EmpresasController::class, 'show']);
