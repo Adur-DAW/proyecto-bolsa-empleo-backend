@@ -73,6 +73,7 @@ class OfertasController extends Controller
         try {
             $usuario = JWTAuth::parseToken()->authenticate();
         } catch (\Exception) {
+            // Permitido por middleware si es público, o ya autenticado
             return response()->json(Oferta::with('empresa')->get());
         }
 
@@ -108,7 +109,7 @@ class OfertasController extends Controller
                 $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
             }
         } catch (\Exception) {
-
+            // Permitido por middleware
         }
 
         return response()->json($oferta);
