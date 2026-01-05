@@ -115,8 +115,19 @@ class OfertasController extends Controller
             });
         }
 
-        // Ordenar por fecha de publicación descendente por defecto
-        $query->orderBy('fecha_publicacion', 'desc');
+        // Sorting
+        if ($request->has('sort_by')) {
+             $sort = $request->input('sort_by');
+             $parts = explode('.', $sort);
+             $field = $parts[0];
+             $direction = $parts[1] ?? 'desc'; // Default desc for dates
+
+             if (in_array($field, ['fecha_publicacion', 'fecha_cierre', 'numero_puestos', 'nombre'])) {
+                 $query->orderBy($field, $direction);
+             }
+        } else {
+             $query->orderBy('fecha_publicacion', 'desc');
+        }
 
         $limit = $request->input('limit', 20);
         $ofertas = $query->paginate($limit);

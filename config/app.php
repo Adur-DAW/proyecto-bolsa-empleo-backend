@@ -123,6 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'ofertas_publicas' => env('OFERTAS_PUBLICAS', true),
+    'ofertas_publicas' => env('OFERTAS_PUBLICAS', false),
 
 ];

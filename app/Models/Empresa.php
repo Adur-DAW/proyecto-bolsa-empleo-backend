@@ -51,4 +51,9 @@ class Empresa extends Model
     {
         return $this->belongsTo(Usuario::class, 'id_empresa', 'id');
     }
+
+    public function ofertas()
+    {
+        return $this->hasMany(Oferta::class, 'id_empresa');
+    }
 }

@@ -110,15 +110,36 @@ class EmpresasController extends Controller
         }
 
         $usuario = JWTAuth::parseToken()->authenticate();
-        $query = Empresa::with('familiaProfesional');
+        $query = Empresa::with('familiaProfesional')
+            ->withCount('ofertas')
+            ->withSum('ofertas as vacantes', 'numero_puestos');
 
         if ($usuario->rol !== 'centro') {
             $query->where('validado', true);
         } else {
-             $query->orderBy('validado', 'asc'); // Pendientes primero para admin
+             // Admin sees all, but we can sort by validation if needed, default is mixed or sorted by requested param
         }
 
         $this->aplicarFiltros($query, $request);
+
+        // Sorting
+        if ($request->has('sort_by')) {
+            $sort = $request->input('sort_by');
+            // Format: field.direction (e.g. nombre.asc, ofertas_count.desc)
+            $parts = explode('.', $sort);
+            $field = $parts[0];
+            $direction = $parts[1] ?? 'asc';
+
+            if (in_array($field, ['nombre', 'localidad', 'ofertas_count', 'vacantes', 'validado'])) {
+                $query->orderBy($field, $direction);
+            }
+        } else {
+            // Default sort if admin default to validation? Or just name?
+             if ($usuario->rol === 'centro') {
+                $query->orderBy('validado', 'asc');
+             }
+             $query->orderBy('nombre', 'asc');
+        }
 
         return response()->json($query->get());
     }
