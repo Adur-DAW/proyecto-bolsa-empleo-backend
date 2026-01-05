@@ -36,11 +36,16 @@ class Empresa extends Model
         'id_empresa',
         'validado',
         'nombre',
-        'familia_profesional',
+        'familia_profesional_id',
         'localidad',
         'telefono',
         'localidad'
     ];
+
+    public function familiaProfesional()
+    {
+        return $this->belongsTo(FamiliaProfesional::class, 'familia_profesional_id');
+    }
 
     public function usuario()
     {

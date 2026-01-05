@@ -29,7 +29,7 @@ class Oferta extends Model
         'nombre',
         'fecha_publicacion',
         'numero_puestos',
-        'tipo_contrato',
+        'tipo_contrato_id',
         'horario',
         'dias_descanso',
         'obs',
@@ -41,6 +41,11 @@ class Oferta extends Model
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'id_empresa');
+    }
+
+    public function tipoContrato()
+    {
+        return $this->belongsTo(TipoContrato::class, 'tipo_contrato_id');
     }
 
     public function titulos() {

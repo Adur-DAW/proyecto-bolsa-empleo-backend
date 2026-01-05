@@ -26,7 +26,7 @@ class OfertasController extends Controller
             'nombre' => 'required|string|max:45',
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
-            'tipo_contrato' => 'required|string|max:45',
+            'tipo_contrato_id' => 'required|exists:tipos_contrato,id',
             'horario' => 'required|string|max:45',
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
@@ -38,7 +38,7 @@ class OfertasController extends Controller
             'nombre' => $request->nombre,
             'fecha_publicacion' => $request->fecha_publicacion,
             'numero_puestos' => $request->numero_puestos,
-            'tipo_contrato' => $request->tipo_contrato,
+            'tipo_contrato_id' => $request->tipo_contrato_id,
             'horario' => $request->horario,
             'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',
@@ -74,10 +74,9 @@ class OfertasController extends Controller
             $usuario = JWTAuth::parseToken()->authenticate();
         } catch (\Exception) {
             // Permitido por middleware si es público, o ya autenticado
-            return response()->json(Oferta::with('empresa')->get());
         }
 
-        $ofertas = Oferta::with('empresa')->get();
+        $ofertas = Oferta::with('empresa', 'tipoContrato')->get();
 
         $ofertas->each(function ($oferta) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
@@ -94,7 +93,7 @@ class OfertasController extends Controller
 
     public function obtenerPorId($id)
     {
-        $oferta = Oferta::with('empresa')->find($id);
+        $oferta = Oferta::with('empresa', 'tipoContrato')->find($id);
         
         if (!$oferta) {
             return response()->json(['error' => 'Oferta no encontrada'], 404);
@@ -180,7 +179,7 @@ class OfertasController extends Controller
             'nombre' => 'required|string|max:45',
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
-            'tipo_contrato' => 'required|string|max:45',
+            'tipo_contrato_id' => 'required|exists:tipos_contrato,id',
             'horario' => 'required|string|max:45',
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
@@ -194,7 +193,7 @@ class OfertasController extends Controller
             'nombre' => $request->nombre,
             'fecha_publicacion' => $request->fecha_publicacion,
             'numero_puestos' => $request->numero_puestos,
-            'tipo_contrato' => $request->tipo_contrato,
+            'tipo_contrato_id' => $request->tipo_contrato_id,
             'horario' => $request->horario,
             'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',

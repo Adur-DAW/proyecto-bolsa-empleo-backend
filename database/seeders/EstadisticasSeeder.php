@@ -9,6 +9,8 @@ use App\Models\Usuario;
 use App\Models\Empresa;
 use App\Models\Demandante;
 use App\Models\Oferta;
+use App\Models\FamiliaProfesional;
+use App\Models\TipoContrato;
 use Carbon\Carbon;
 
 class EstadisticasSeeder extends Seeder
@@ -30,14 +32,27 @@ class EstadisticasSeeder extends Seeder
         $faker = \Faker\Factory::create('es_ES');
 
         // 1. Títulos y Familias
-        $familias = ['Informática', 'Administración', 'Hostelería', 'Sanidad', 'Comercio'];
+        // Fetch existing families or create if defaulting (assuming migrations populated them, but safer to fetch)
+        $familiasModel = FamiliaProfesional::all();
+        if($familiasModel->isEmpty()){
+             // Fallback if truncation happened or empty
+             $nombresFamilias = ['Informática', 'Administración', 'Hostelería', 'Sanidad', 'Comercio'];
+             foreach($nombresFamilias as $nom){
+                 FamiliaProfesional::create(['nombre' => $nom]);
+             }
+             $familiasModel = FamiliaProfesional::all();
+        }
+        
+        $familiasIds = $familiasModel->pluck('id', 'nombre')->toArray(); // ['Nombre' => ID]
+        $familiasNames = $familiasModel->pluck('nombre')->toArray();
+
         $titulosIds = [];
 
-        foreach ($familias as $familia) {
+        foreach ($familiasModel as $familia) {
             for ($i = 0; $i < 5; $i++) {
-                $titulosIds[$familia][] = DB::table('titulos')->insertGetId([
-                    'nombre' => $familia . ' - Grado ' . ($i + 1),
-                    'familia_profesional' => $familia,
+                $titulosIds[$familia->nombre][] = DB::table('titulos')->insertGetId([
+                    'nombre' => $familia->nombre . ' - Grado ' . ($i + 1),
+                    'familia_profesional_id' => $familia->id,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -63,7 +78,7 @@ class EstadisticasSeeder extends Seeder
                 'cif' => $faker->vat,
                 'localidad' => $faker->randomElement(['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao', 'Zaragoza', 'Malaga', 'Murcia']), 
                 'telefono' => substr($faker->phoneNumber, 0, 9),
-                'familia_profesional' => $faker->randomElement($familias),
+                'familia_profesional_id' => $faker->randomElement($familiasModel)->id,
                 'validado' => 1,
                 'created_at' => $fechaRegistro,
                 'updated_at' => $fechaRegistro
@@ -93,7 +108,7 @@ class EstadisticasSeeder extends Seeder
                 'updated_at' => $fechaRegistro
             ]);
 
-            $familia = $faker->randomElement($familias);
+            $familiaObj = $faker->randomElement($familiasModel);
             
             $demandante = Demandante::create([
                 'id_demandante' => $userD->id,
@@ -103,7 +118,7 @@ class EstadisticasSeeder extends Seeder
                 'apellido2' => $faker->lastName,
                 'email' => $userD->email,
                 'telefono_movil' => substr($faker->phoneNumber, 0, 9),
-                'familia_profesional' => $familia,
+                'familia_profesional_id' => $familiaObj->id,
                 'situacion' => 1,
                 'created_at' => $fechaRegistro,
                 'updated_at' => $fechaRegistro
@@ -113,7 +128,7 @@ class EstadisticasSeeder extends Seeder
             // Asignar Título
             DB::table('titulos_demandante')->insert([
                 'id_demandante' => $demandante->id_demandante,
-                'id_titulo' => $faker->randomElement($titulosIds[$familia]),
+                'id_titulo' => $faker->randomElement($titulosIds[$familiaObj->nombre]),
                 'año' => $faker->year(),
                 'created_at' => $fechaRegistro,
                 'updated_at' => $fechaRegistro
@@ -121,18 +136,25 @@ class EstadisticasSeeder extends Seeder
         }
 
         // 4. Ofertas (600 Ofertas en 8 meses)
+        
+        $tiposContratoIds = TipoContrato::pluck('id')->toArray();
+        if(empty($tiposContratoIds)) {
+             $t = TipoContrato::create(['nombre' => 'Jornada completa']);
+             $tiposContratoIds[] = $t->id;
+        }
+
         for ($i = 0; $i < 600; $i++) {
             $fechaPub = Carbon::now()->subDays(rand(1, 240));
             $empresaId = $faker->randomElement($empresasIds);
             
-            $familiaOferta = $faker->randomElement($familias); 
-            $tituloRequerido = $faker->randomElement($titulosIds[$familiaOferta]);
+            $familiaOfertaObj = $faker->randomElement($familiasModel); 
+            $tituloRequerido = $faker->randomElement($titulosIds[$familiaOfertaObj->nombre]);
 
             $oferta = Oferta::create([
-                'nombre' => 'Oferta de ' . $familiaOferta . ' #' . $i,
+                'nombre' => 'Oferta de ' . $familiaOfertaObj->nombre . ' #' . $i,
                 'fecha_publicacion' => $fechaPub,
                 'numero_puestos' => rand(1, 4),
-                'tipo_contrato' => 'Indefinido',
+                'tipo_contrato_id' => $faker->randomElement($tiposContratoIds),
                 'abierta' => 1,
                 'id_empresa' => $empresaId,
                 'created_at' => $fechaPub,

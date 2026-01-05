@@ -19,6 +19,11 @@ Route::post('login', [JWTAuthController::class, 'login']);
 
 Route::get('empresas', [EmpresasController::class, 'obtener']);
 Route::get('demandantes', [DemandantesController::class, 'obtener']);
+use App\Http\Controllers\Api\MaestrosController;
+
+Route::get('maestros/familias-profesionales', [MaestrosController::class, 'getFamiliasProfesionales']);
+Route::get('maestros/tipos-contrato', [MaestrosController::class, 'getTiposContrato']);
+
 Route::middleware([VerificarOfertasPublicas::class])->group(function () {
     Route::get('ofertas', [OfertasController::class, 'obtener']);
     Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);

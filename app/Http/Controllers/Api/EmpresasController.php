@@ -18,7 +18,8 @@ class EmpresasController extends Controller
             'cif' => 'required|string|size:9|unique:empresas,cif',
             'nombre' => 'required|string|max:45',
             'localidad' => 'required|string|max:45',
-            'telefono' => 'required|string|size:9'
+            'telefono' => 'required|string|size:9',
+            'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         $empresa = Empresa::create([
@@ -27,7 +28,8 @@ class EmpresasController extends Controller
             'nombre' => $request->nombre,
             'localidad' => $request->localidad,
             'telefono' => $request->telefono,
-            'validado' => false
+            'validado' => false,
+            'familia_profesional_id' => $request->familia_profesional_id
         ]);
 
         return response()->json([
@@ -44,7 +46,8 @@ class EmpresasController extends Controller
             'cif' => 'required|string|size:9',
             'nombre' => 'required|string|max:45',
             'localidad' => 'required|string|max:45',
-            'telefono' => 'required|string|size:9'
+            'telefono' => 'required|string|size:9',
+            'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         $empresa = Empresa::where('id_empresa', $usuario->id)->first();
@@ -53,7 +56,8 @@ class EmpresasController extends Controller
             'cif' => $request->cif,
             'nombre' => $request->nombre,
             'localidad' => $request->localidad,
-            'telefono' => $request->telefono
+            'telefono' => $request->telefono,
+            'familia_profesional_id' => $request->familia_profesional_id
         ]);
 
         return response()->json([
