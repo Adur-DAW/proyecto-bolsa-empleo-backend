@@ -18,6 +18,7 @@ Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
 
 Route::get('empresas', [EmpresasController::class, 'obtener']);
+Route::get('empresas/{id}', [EmpresasController::class, 'show']);
 Route::get('demandantes', [DemandantesController::class, 'obtener']);
 use App\Http\Controllers\Api\MaestrosController;
 

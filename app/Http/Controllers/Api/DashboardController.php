@@ -43,7 +43,7 @@ class DashboardController extends Controller
                 $q->whereIn('id_titulo', $titulosIds);
             })
             ->whereDoesntHave('demandantes', function ($q) use ($demandante) {
-                $q->where('id_demandante', $demandante->id_demandante);
+                $q->where('demandantes.id_demandante', $demandante->id_demandante);
             })
             ->with('empresa')
             ->latest('fecha_publicacion')
