@@ -39,7 +39,8 @@ class Empresa extends Model
         'familia_profesional_id',
         'localidad',
         'telefono',
-        'localidad'
+        'localidad',
+        'imagen_url'
     ];
 
     public function familiaProfesional()

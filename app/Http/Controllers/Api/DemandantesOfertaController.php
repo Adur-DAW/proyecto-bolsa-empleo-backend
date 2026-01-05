@@ -8,6 +8,10 @@ use App\Models\Usuario;
 use App\Mail\NuevaInscripcionMail;
 use App\Mail\OfertaCerradaMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\Demandante;
+use App\Models\Titulo;
 
 class DemandantesOfertaController extends Controller
 {

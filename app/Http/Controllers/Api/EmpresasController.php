@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class EmpresasController extends Controller
@@ -52,13 +53,24 @@ class EmpresasController extends Controller
 
         $empresa = Empresa::where('id_empresa', $usuario->id)->first();
 
-        $empresa->update([
+        if ($request->hasFile('imagen')) {
+            $path = $request->file('imagen')->store('public/empresas');
+            $url = Storage::url($path);
+        }
+
+        $updateData = [
             'cif' => $request->cif,
             'nombre' => $request->nombre,
             'localidad' => $request->localidad,
             'telefono' => $request->telefono,
             'familia_profesional_id' => $request->familia_profesional_id
-        ]);
+        ];
+
+        if (isset($url)) {
+            $updateData['imagen_url'] = $url;
+        }
+
+        $empresa->update($updateData);
 
         return response()->json([
             'message' => 'Empresa actualizada con éxito',
