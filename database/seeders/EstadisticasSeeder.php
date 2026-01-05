@@ -44,10 +44,10 @@ class EstadisticasSeeder extends Seeder
             }
         }
 
-        // 2. Empresas y Usuarios
+        // 2. Empresas y Usuarios (200 Empresas)
         $empresasIds = [];
-        for ($i = 0; $i < 10; $i++) {
-            $fechaRegistro = Carbon::now()->subDays(rand(1, 180));
+        for ($i = 0; $i < 200; $i++) {
+            $fechaRegistro = Carbon::now()->subDays(rand(1, 240));
 
             $userUrl = Usuario::create([
                 'email' => "empresa$i@test.com",
@@ -61,7 +61,7 @@ class EstadisticasSeeder extends Seeder
                 'id_empresa' => $userUrl->id,
                 'nombre' => $faker->company,
                 'cif' => $faker->vat,
-                'localidad' => $faker->randomElement(['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao']), // Pocas para agrupar
+                'localidad' => $faker->randomElement(['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao', 'Zaragoza', 'Malaga', 'Murcia']), 
                 'telefono' => substr($faker->phoneNumber, 0, 9),
                 'familia_profesional' => $faker->randomElement($familias),
                 'validado' => 1,
@@ -76,14 +76,14 @@ class EstadisticasSeeder extends Seeder
             'email' => 'admin@test.com',
             'password' => Hash::make('password'),
             'rol' => 'centro',
-            'created_at' => now(), // Admin hoy
+            'created_at' => now(), 
             'updated_at' => now()
         ]);
 
-        // 3. Demandantes
+        // 3. Demandantes (500 Demandantes)
         $demandantesIds = [];
-        for ($i = 0; $i < 50; $i++) {
-            $fechaRegistro = Carbon::now()->subDays(rand(1, 180));
+        for ($i = 0; $i < 500; $i++) {
+            $fechaRegistro = Carbon::now()->subDays(rand(1, 240));
 
             $userD = Usuario::create([
                 'email' => "demandante$i@test.com",
@@ -120,12 +120,11 @@ class EstadisticasSeeder extends Seeder
             ]);
         }
 
-        // 4. Ofertas (Pasados 6 meses)
-        for ($i = 0; $i < 60; $i++) {
-            $fechaPub = Carbon::now()->subDays(rand(1, 180));
+        // 4. Ofertas (600 Ofertas en 8 meses)
+        for ($i = 0; $i < 600; $i++) {
+            $fechaPub = Carbon::now()->subDays(rand(1, 240));
             $empresaId = $faker->randomElement($empresasIds);
             
-            // Determinar familia de la oferta basado en la empresa o random
             $familiaOferta = $faker->randomElement($familias); 
             $tituloRequerido = $faker->randomElement($titulosIds[$familiaOferta]);
 
@@ -140,7 +139,6 @@ class EstadisticasSeeder extends Seeder
                 'updated_at' => $fechaPub,
             ]);
 
-            // Asignar título a oferta
             DB::table('titulos_oferta')->insert([
                 'id_oferta' => $oferta->id,
                 'id_titulo' => $tituloRequerido,
@@ -149,14 +147,13 @@ class EstadisticasSeeder extends Seeder
             ]);
 
             // Generar inscripciones
-            $numInscritos = rand(0, 8);
-            $seAdjudica = rand(0, 1) === 1 && $numInscritos > 0; // 50% de probabilidad de adjudicarse si hay inscritos
+            $numInscritos = rand(0, 15); // Más competencia
+            $seAdjudica = rand(0, 10) > 3 && $numInscritos > 0; // 70% probabilidad adjudicar
 
             $candidatos = $faker->randomElements($demandantesIds, $numInscritos);
 
             foreach ($candidatos as $idx => $candId) {
-                // Si se adjudica, elegir uno al azar
-                $esElElegido = $seAdjudica && $idx === 0; // Simplificación: el primero se la lleva
+                $esElElegido = $seAdjudica && $idx === 0; 
 
                 $adjudicada = $esElElegido ? 1 : 0;
                 $fechaAdj = $esElElegido ? (clone $fechaPub)->addDays(rand(2, 20)) : null;
@@ -165,19 +162,17 @@ class EstadisticasSeeder extends Seeder
                     'id_oferta' => $oferta->id,
                     'id_demandante' => $candId,
                     'adjudicada' => $adjudicada,
-                    'fecha' => $fechaAdj ? $fechaAdj : null, // Fecha adjudicación
-                    'created_at' => (clone $fechaPub)->addDays(rand(0, 2)), // Fecha inscripción
+                    'fecha' => $fechaAdj ? $fechaAdj : null, 
+                    'created_at' => (clone $fechaPub)->addDays(rand(0, 2)), 
                     'updated_at' => now()
                 ]);
 
                 if ($esElElegido) {
-                    $oferta->abierta = 0; // Cerrar oferta (Adjudicada)
+                    $oferta->abierta = 0; 
                     $oferta->save();
                 }
             }
 
-            // SIMULAR OFERTAS CERRADAS SIN ADJUDICAR (DESIERTAS O CANCELADAS)
-            // Cada 10 ofertas, forzamos una que se cierre sin adjudicar (si quedan huecos)
             if ($i % 10 === 0 && $oferta->abierta === 1) {
                 $oferta->abierta = 0;
                 $oferta->save();

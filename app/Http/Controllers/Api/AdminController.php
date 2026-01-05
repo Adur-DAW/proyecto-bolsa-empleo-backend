@@ -22,78 +22,34 @@ class AdminController extends Controller
 
         $fechaInicio = $peticion->query('fechaInicio');
         $fechaFin = $peticion->query('fechaFin');
-        
+
         if ($fechaFin) {
             $fechaFin = $fechaFin . ' 23:59:59';
         }
 
-        $familia = $peticion->query('familia'); // Nuevo filtro
+        $familia = $peticion->query('familia');
 
-        // --- Estructura Base de Queries con Filtros Globales ---
-        $baseOfertas = Oferta::query();
-        $baseDemandantes = Demandante::query();
-        $baseEmpresas = Empresa::query();
 
-        // Filtro Fechas
-        if ($fechaInicio && $fechaFin) {
-            $baseOfertas->whereBetween('fecha_publicacion', [$fechaInicio, $fechaFin]);
-            $baseDemandantes->whereBetween('created_at', [$fechaInicio, $fechaFin]);
-            $baseEmpresas->whereBetween('created_at', [$fechaInicio, $fechaFin]);
-        }
+        $datosTotales = $this->obtenerTotalesYComparativa($fechaInicio, $fechaFin, $familia);
 
-        // Filtro Familia (Solo afecta a Ofertas y Demandantes, Empresas no suelen tener familia directa asociada en este contexto global a menos que se fuerce, aplicamos a ofertas y demandantes)
-        if ($familia) {
-             // Ofertas: filtrar por relación con títulos requeridos o campo si lo hubiera.
-             // Asumimos que la oferta pertenece a familias de sus títulos requeridos.
-             $baseOfertas->whereHas('titulos', function ($q) use ($familia) {
-                 $q->where('familia_profesional', $familia);
-             });
-             $baseDemandantes->where('familia_profesional', $familia);
-        }
 
-        // --- 1. Totales ---
-        $ofertasAdjudicadasQuery = clone $baseOfertas;
-        $countOfertasAdjudicadas = $ofertasAdjudicadasQuery->whereHas('demandantes', function($q) {
-             $q->where('adjudicada', 1);
-        })->count();
-
-        $datosTotales = [
-            'ofertas' => (clone $baseOfertas)->count(),
-            'ofertas_adjudicadas' => $countOfertasAdjudicadas,
-            'demandantes' => (clone $baseDemandantes)->count(),
-            'empresas' => (clone $baseEmpresas)->count(), // Empresas generalmente no se filtran por familia
-        ];
-
-        // --- 2. Evolución Registros ---
         $registros = $this->obtenerEvolucionRegistros($fechaInicio, $fechaFin, $familia, $peticion->query('agrupacion', 'diario'));
 
-        // --- 3. Evolución Ofertas ---
+
         $ofertasEvolucion = $this->obtenerEvolucionOfertas($fechaInicio, $fechaFin, $familia, $peticion->query('agrupacion', 'diario'));
 
-        // --- 4. Top Familias ---
+
         $topFamilias = $this->obtenerTopFamilias($fechaInicio, $fechaFin);
 
-        // --- 5. Distribución Geográfica ---
+
         $localidades = $this->obtenerDistribucionGeografica($fechaInicio, $fechaFin, $familia);
 
-        // --- METRICAS NUEVAS ---
 
-        // 6. Tiempo Medio de Resolución (Días)
-        // Avg(Fecha Adjudicación - Fecha Publicación) de ofertas adjudicadas
         $tiempoResolucion = $this->obtenerTiempoMedioResolucion($fechaInicio, $fechaFin, $familia);
-
-        // 7. Top Empresas (Más activas publicando ofertas)
         $topEmpresasList = $this->obtenerTopEmpresas($fechaInicio, $fechaFin, $familia);
-
-        // 8. Funnel (Candidaturas vs Adjudicadas)
         $funnel = $this->obtenerFunnel($fechaInicio, $fechaFin, $familia);
-
-        // 9. Estado Ofertas (Abiertas vs Cerradas vs Adjudicadas)
         $estadoOfertas = $this->obtenerEstadoOfertas($fechaInicio, $fechaFin, $familia);
-
-        // 10. Top Títulos (Más solicitados en ofertas)
         $topTitulos = $this->obtenerTopTitulos($fechaInicio, $fechaFin, $familia);
-
 
         return response()->json([
             'totales' => $datosTotales,
@@ -105,11 +61,78 @@ class AdminController extends Controller
             'top_empresas' => $topEmpresasList,
             'funnel' => $funnel,
             'estado_ofertas' => $estadoOfertas,
-            'top_titulos' => $topTitulos // Nueva métrica
+            'top_titulos' => $topTitulos
         ]);
     }
 
-    // --- Helpers de Métricas ---
+
+
+    private function obtenerTotalesYComparativa($inicio, $fin, $familia)
+    {
+
+        $actual = $this->calcularTotalesPeriodo($inicio, $fin, $familia);
+
+
+        if ($inicio && $fin) {
+            $start = \Carbon\Carbon::parse($inicio);
+            $end = \Carbon\Carbon::parse($fin);
+            $dias = $start->diffInDays($end) + 1;
+
+            $prevInicio = $start->copy()->subDays($dias);
+            $prevFin = $end->copy()->subDays($dias);
+
+            $anterior = $this->calcularTotalesPeriodo($prevInicio, $prevFin, $familia);
+        } else {
+            $anterior = $actual;
+        }
+
+
+        $variacion = [
+            'ofertas' => $this->calcPct($actual['ofertas'], $anterior['ofertas']),
+            'ofertas_adjudicadas' => $this->calcPct($actual['ofertas_adjudicadas'], $anterior['ofertas_adjudicadas']),
+            'demandantes' => $this->calcPct($actual['demandantes'], $anterior['demandantes']),
+            'empresas' => $this->calcPct($actual['empresas'], $anterior['empresas']),
+        ];
+
+        return array_merge($actual, ['variacion' => $variacion]);
+    }
+
+    private function calcularTotalesPeriodo($inicio, $fin, $familia) {
+        $baseOfertas = Oferta::query();
+        $baseDemandantes = Demandante::query();
+        $baseEmpresas = Empresa::query();
+
+        if ($inicio && $fin) {
+            $baseOfertas->whereBetween('fecha_publicacion', [$inicio, $fin]);
+            $baseDemandantes->whereBetween('created_at', [$inicio, $fin]);
+            $baseEmpresas->whereBetween('created_at', [$inicio, $fin]);
+        }
+
+        if ($familia) {
+            $baseOfertas->whereHas('titulos', function ($q) use ($familia) {
+                $q->where('familia_profesional', $familia);
+            });
+            $baseDemandantes->where('familia_profesional', $familia);
+        }
+
+        $adjudicadas = (clone $baseOfertas)->whereHas('demandantes', function($q) {
+             $q->where('adjudicada', 1);
+        })->count();
+
+        return [
+            'ofertas' => $baseOfertas->count(),
+            'ofertas_adjudicadas' => $adjudicadas,
+            'demandantes' => $baseDemandantes->count(),
+            'empresas' => $baseEmpresas->count(),
+        ];
+    }
+
+    private function calcPct($nuevo, $viejo) {
+        if ($viejo == 0) return $nuevo > 0 ? 100 : 0;
+        return round((($nuevo - $viejo) / $viejo) * 100, 1);
+    }
+
+
 
     private function obtenerTiempoMedioResolucion($inicio, $fin, $familia) {
         $query = DB::table('ofertas')
@@ -118,7 +141,7 @@ class AdminController extends Controller
             ->select(DB::raw('AVG(DATEDIFF(demandantes_oferta.fecha, ofertas.fecha_publicacion)) as dias_medio'));
 
         if ($inicio && $fin) $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
-        
+
         if ($familia) {
              $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                    ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
@@ -137,7 +160,7 @@ class AdminController extends Controller
             ->limit(5);
 
         if ($inicio && $fin) $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
-        
+
         if ($familia) {
             $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                   ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
@@ -150,7 +173,7 @@ class AdminController extends Controller
     private function obtenerFunnel($inicio, $fin, $familia) {
         $queryInscripciones = DB::table('demandantes_oferta')
             ->join('ofertas', 'demandantes_oferta.id_oferta', '=', 'ofertas.id');
-        
+
         $queryAdjudicadas = DB::table('demandantes_oferta')
             ->join('ofertas', 'demandantes_oferta.id_oferta', '=', 'ofertas.id')
             ->where('demandantes_oferta.adjudicada', 1);
@@ -161,7 +184,6 @@ class AdminController extends Controller
         }
 
         if ($familia) {
-            // Filtrar lógica familia
              $filter = function($q) use ($familia) {
                 $q->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                   ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
@@ -183,10 +205,9 @@ class AdminController extends Controller
             DB::raw('SUM(CASE WHEN abierta = 1 THEN 1 ELSE 0 END) as abiertas'),
             DB::raw("SUM(CASE WHEN (select count(*) from demandantes_oferta d_o where d_o.id_oferta = ofertas.id and d_o.adjudicada = 1) > 0 THEN 1 ELSE 0 END) as adjudicadas")
         );
-        // Cerradas son Total - Abiertas (simplificación, o fecha_cierre < now)
-        
+
         if ($inicio && $fin) $query->whereBetween('fecha_publicacion', [$inicio, $fin]);
-        
+
         if ($familia) {
              $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                    ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
@@ -197,10 +218,10 @@ class AdminController extends Controller
         return [
             'abiertas' => $res->abiertas ?? 0,
             'adjudicadas' => $res->adjudicadas ?? 0,
-            'cerradas_sin_adjudicar' => ($res->total - $res->abiertas - $res->adjudicadas)
+            'cerradas_sin_adjudicar' => ($res->total - ($res->abiertas ?? 0) - ($res->adjudicadas ?? 0))
         ];
     }
-    
+
     private function obtenerTopTitulos($inicio, $fin, $familia) {
         $query = DB::table('titulos_oferta')
             ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
@@ -211,7 +232,7 @@ class AdminController extends Controller
             ->limit(8);
 
         if ($inicio && $fin) $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
-        
+
         if ($familia) {
             $query->where('titulos.familia_profesional', $familia);
         }
@@ -219,29 +240,27 @@ class AdminController extends Controller
         return $query->get();
     }
 
-    // --- Métodos Existentes Adaptados (Evolución, etc) ---
+
 
     private function obtenerEvolucionRegistros($inicio, $fin, $familia = null, $agrupacion = 'diario')
     {
-        // Determinar campo de agrupación
-        $groupByD = "DATE_FORMAT(created_at, '%Y-%m-%d')"; // Default diario
+        $groupByD = "DATE_FORMAT(created_at, '%Y-%m-%d')";
         $groupByE = "DATE_FORMAT(created_at, '%Y-%m-%d')";
-        $label = "periodo";
 
         if ($agrupacion === 'mensual') {
             $groupByD = "DATE_FORMAT(created_at, '%Y-%m')";
             $groupByE = "DATE_FORMAT(created_at, '%Y-%m')";
         } elseif ($agrupacion === 'familia') {
             $groupByD = "familia_profesional";
-            $groupByE = "'Sin Familia'"; // Empresas no tienen familia directa en este contexto simple
+            $groupByE = "'Sin Familia'";
         } elseif ($agrupacion === 'localidad') {
-            $groupByD = "'Desconocido'"; // Demandantes no tienen localidad simple
+            $groupByD = "'Desconocido'";
             $groupByE = "localidad";
         }
 
         $queryD = Demandante::select(DB::raw("$groupByD as periodo"), DB::raw('count(*) as total'))
                     ->groupBy('periodo');
-        
+
         $queryE = Empresa::select(DB::raw("$groupByE as periodo"), DB::raw('count(*) as total'))
                     ->groupBy('periodo');
 
@@ -249,7 +268,7 @@ class AdminController extends Controller
             $queryD->whereBetween('created_at', [$inicio, $fin]);
             $queryE->whereBetween('created_at', [$inicio, $fin]);
         }
-        
+
         if ($familia) {
             $queryD->where('familia_profesional', $familia);
         }
@@ -257,12 +276,11 @@ class AdminController extends Controller
         $demandantes = $queryD->get()->keyBy('periodo');
         $empresas = ($agrupacion === 'familia' || $agrupacion === 'localidad' && $agrupacion !== 'localidad') ? collect([]) : $queryE->get()->keyBy('periodo');
 
-        // Merge keys
         $allKeys = $demandantes->keys()->merge($empresas->keys())->unique()->sort()->values();
 
         $resultado = [];
         foreach ($allKeys as $key) {
-            if ($key === 'Sin Familia' || $key === 'Desconocido') continue; // Limpiar datos dummy
+            if (empty($key) || $key === 'Sin Familia' || $key === 'Desconocido' || $key === 'null') continue;
             $resultado[] = [
                 'periodo' => $key,
                 'demandantes' => $demandantes[$key]->total ?? 0,
@@ -276,23 +294,17 @@ class AdminController extends Controller
     private function obtenerEvolucionOfertas($inicio, $fin, $familia = null, $agrupacion = 'diario')
     {
         $groupBy = "DATE_FORMAT(fecha_publicacion, '%Y-%m-%d')";
-        
+
         if ($agrupacion === 'mensual') {
             $groupBy = "DATE_FORMAT(fecha_publicacion, '%Y-%m')";
         } elseif ($agrupacion === 'familia') {
-             // Necesitamos join para agrupar ofertas por familia
-             // Esto es complejo porque una oferta tiene titulos y titulos tienen familia.
-             // Asumimos titulos.familia_profesional.
-             // Si agrupamos por familia, necesitamos el join en la base.
-             // Como este helper usa Oferta::select, hacemos el join abajo.
              $groupBy = "t.familia_profesional";
         } elseif ($agrupacion === 'localidad') {
              $groupBy = "e.localidad";
         }
 
-        // Base Query
         $query = DB::table('ofertas');
-        
+
         if ($agrupacion === 'familia') {
             $query->join('titulos_oferta as to', 'ofertas.id', '=', 'to.id_oferta')
                   ->join('titulos as t', 'to.id_titulo', '=', 't.id');
@@ -309,9 +321,8 @@ class AdminController extends Controller
         if ($inicio && $fin) {
             $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
         }
-        
+
         if ($familia) {
-             // Si ya hicimos join arriba, no repetirlo o controlar alias
              if ($agrupacion !== 'familia') {
                 $query->join('titulos_oferta as to2', 'ofertas.id', '=', 'to2.id_oferta')
                       ->join('titulos as t2', 'to2.id_titulo', '=', 't2.id')
@@ -326,7 +337,6 @@ class AdminController extends Controller
 
     private function obtenerTopFamilias($inicio, $fin)
     {
-        // Top familias ignora el filtro de familia (para ver el contexto global o podríamos filtrar, pero mejor ver el global)
         $query = Demandante::select('familia_profesional', DB::raw('count(*) as total'))
             ->whereNotNull('familia_profesional')
             ->groupBy('familia_profesional')
@@ -348,11 +358,11 @@ class AdminController extends Controller
             ->groupBy('empresas.localidad')
             ->orderByDesc('total')
             ->limit(10);
-            
+
         if ($inicio && $fin) {
             $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
         }
-        
+
         if ($familia) {
              $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                    ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
