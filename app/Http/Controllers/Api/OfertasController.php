@@ -59,7 +59,7 @@ class OfertasController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // No bloquear la respuesta si falla el mail
+            \Illuminate\Support\Facades\Log::error('Error enviando email a demandantes: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -78,56 +78,7 @@ class OfertasController extends Controller
 
         $query = Oferta::with('empresa', 'tipoContrato');
 
-        if ($request->has('empresa_id')) {
-            $query->where('id_empresa', $request->input('empresa_id'));
-        }
-
-        if ($request->has('estado')) {
-            $estado = $request->input('estado');
-            if ($estado === 'activas') {
-                $query->where('abierta', true);
-            } elseif ($estado === 'cerradas') {
-                $query->where('abierta', false);
-            }
-            // 'todas' no añade filtro (pero respeta el filtro por empresa si existe)
-        } else {
-             // Comportamiento por defecto: si no especifica estado ni empresa, ¿mostramos solo abiertas en general?
-             // En la lista general (sin empresa_id), solemos querer solo las abiertas, 
-             // pero si pedimos historial de empresa, quizás queramos todas.
-             
-             // MANTENER COMPORTAMIENTO ORIGINAL: Si es lista general pública, solo abiertas.
-             // Pero el código original traía TODAS en obtener()... espera, obtener() NO filtraba por abierta=true antes.
-             // Revisando el código anterior: $ofertas = Oferta::with(...)->get(); -> Traía todas.
-             // DashboardController traía solo abiertas.
-             // OfertasLista.tsx mostraba "Activa: Si/No".
-             // Así que por defecto TRAE TODAS. El frontend filtra o muestra el estado.
-             // Vamos a mantener eso, salvo que se pida 'activas'.
-        }
-
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('nombre', 'like', "%{$search}%")
-                  ->orWhere('obs', 'like', "%{$search}%")
-                  ->orWhereHas('empresa', function($qEmpresa) use ($search) {
-                      $qEmpresa->where('nombre', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        // Sorting
-        if ($request->has('sort_by')) {
-             $sort = $request->input('sort_by');
-             $parts = explode('.', $sort);
-             $field = $parts[0];
-             $direction = $parts[1] ?? 'desc'; // Default desc for dates
-
-             if (in_array($field, ['fecha_publicacion', 'fecha_cierre', 'numero_puestos', 'nombre'])) {
-                 $query->orderBy($field, $direction);
-             }
-        } else {
-             $query->orderBy('fecha_publicacion', 'desc');
-        }
+        $this->aplicarFiltros($query, $request);
 
         $limit = $request->input('limit', 20);
         $ofertas = $query->paginate($limit);
@@ -168,7 +119,7 @@ class OfertasController extends Controller
         return response()->json($oferta);
     }
 
-    public function obtenerPorEmpresaJWT()
+    public function obtenerPorEmpresaJWT(Request $request)
     {
         $usuario = JWTAuth::parseToken()->authenticate();
 
@@ -176,7 +127,11 @@ class OfertasController extends Controller
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $ofertas = Oferta::with('empresa')->where('id_empresa', $usuario->id)->get();
+        $query = Oferta::with('empresa')->where('id_empresa', $usuario->id);
+        
+        $this->aplicarFiltros($query, $request);
+
+        $ofertas = $query->get();
 
         $ofertas->each(function ($oferta) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
@@ -185,7 +140,7 @@ class OfertasController extends Controller
         return response()->json($ofertas);
     }
 
-    public function obtenerPorTitulosDemandanteJWT()
+    public function obtenerPorTitulosDemandanteJWT(Request $request)
     {
         $usuario = JWTAuth::parseToken()->authenticate();
 
@@ -197,9 +152,13 @@ class OfertasController extends Controller
         $titulosDemandante = $usuario->demandante->titulos->pluck('id_titulo');
 
         // Obtener ofertas que tengan alguno de los títulos del demandante
-        $ofertas = Oferta::whereHas('titulos', function ($query) use ($titulosDemandante) {
+        $query = Oferta::whereHas('titulos', function ($query) use ($titulosDemandante) {
             $query->whereIn('id_titulo', $titulosDemandante);
-        })->with('empresa', 'titulos')->get();
+        })->with('empresa', 'titulos');
+
+        $this->aplicarFiltros($query, $request);
+
+        $ofertas = $query->get();
 
         $ofertas->each(function ($oferta) use ($usuario) {
             $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
@@ -210,6 +169,53 @@ class OfertasController extends Controller
         });
 
         return response()->json($ofertas);
+    }
+
+    private function aplicarFiltros($query, Request $request) {
+        if ($request->has('empresa_id')) {
+            $query->where('id_empresa', $request->input('empresa_id'));
+        }
+
+        if ($request->has('estado')) {
+            $estado = $request->input('estado');
+            if ($estado === 'activas') {
+                $query->where('abierta', true);
+            } elseif ($estado === 'cerradas') {
+                $query->where('abierta', false);
+            }
+        }
+
+        if ($request->has('familia_id')) {
+            $familiaId = $request->input('familia_id');
+            $query->whereHas('empresa', function($q) use ($familiaId) {
+                $q->where('familia_profesional_id', $familiaId);
+            });
+        }
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
+                  ->orWhere('obs', 'like', "%{$search}%")
+                  ->orWhereHas('empresa', function($qEmpresa) use ($search) {
+                      $qEmpresa->where('nombre', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Sorting
+        if ($request->has('sort_by')) {
+             $sort = $request->input('sort_by');
+             $parts = explode('.', $sort);
+             $field = $parts[0];
+             $direction = $parts[1] ?? 'desc'; 
+
+             if (in_array($field, ['fecha_publicacion', 'fecha_cierre', 'numero_puestos', 'nombre'])) {
+                 $query->orderBy($field, $direction);
+             }
+        } else {
+             $query->orderBy('fecha_publicacion', 'desc');
+        }
     }
 
 
@@ -265,7 +271,7 @@ class OfertasController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // Ignorar error de mail
+            \Illuminate\Support\Facades\Log::error('Error enviando email de cierre de oferta: ' . $e->getMessage());
         }
 
         return response()->json([

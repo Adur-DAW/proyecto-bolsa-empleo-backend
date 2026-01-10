@@ -47,7 +47,7 @@ class DemandantesOfertaController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // Ignorar error de mail
+            \Illuminate\Support\Facades\Log::error('Error enviando email a empresa: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -113,7 +113,7 @@ class DemandantesOfertaController extends Controller
                 Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
             }
         } catch (\Exception $e) {
-            // Ignorar
+            \Illuminate\Support\Facades\Log::error('Error enviando email de adjudicación (registro): ' . $e->getMessage());
         }
 
         return response()->json([
@@ -197,7 +197,7 @@ class DemandantesOfertaController extends Controller
                 Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
             }
         } catch (\Exception $e) {
-            // Ignorar
+            \Illuminate\Support\Facades\Log::error('Error enviando email de adjudicación: ' . $e->getMessage());
         }
 
         return response()->json([
