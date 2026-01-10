@@ -131,10 +131,12 @@ class OfertasController extends Controller
         
         $this->aplicarFiltros($query, $request);
 
-        $ofertas = $query->get();
+        $limit = $request->input('limit', 20);
+        $ofertas = $query->paginate($limit);
 
-        $ofertas->each(function ($oferta) {
+        $ofertas->getCollection()->transform(function ($oferta) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
+            return $oferta;
         });
 
         return response()->json($ofertas);
@@ -158,14 +160,13 @@ class OfertasController extends Controller
 
         $this->aplicarFiltros($query, $request);
 
-        $ofertas = $query->get();
+        $limit = $request->input('limit', 20);
+        $ofertas = $query->paginate($limit);
 
-        $ofertas->each(function ($oferta) use ($usuario) {
+        $ofertas->getCollection()->transform(function ($oferta) use ($usuario) {
             $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
-        });
-
-        $ofertas->each(function ($oferta) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
+            return $oferta;
         });
 
         return response()->json($ofertas);

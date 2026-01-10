@@ -153,7 +153,8 @@ class EmpresasController extends Controller
              $query->orderBy('nombre', 'asc');
         }
 
-        return response()->json($query->get());
+        $limit = $request->input('limit', 20);
+        return response()->json($query->paginate($limit));
     }
 
     private function aplicarFiltros($query, Request $request) {
