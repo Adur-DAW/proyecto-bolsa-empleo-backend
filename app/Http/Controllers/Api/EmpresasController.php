@@ -159,7 +159,7 @@ class EmpresasController extends Controller
 
     private function aplicarFiltros($query, Request $request) {
         if ($request->has('familia_id')) {
-            $query->where('familia_profesional_id', $request->input('familia_id'));
+            $query->where('familia_profesional_id', (int)$request->input('familia_id'));
         }
 
         if ($request->has('search')) {

@@ -187,7 +187,7 @@ class OfertasController extends Controller
         }
 
         if ($request->has('familia_id')) {
-            $familiaId = $request->input('familia_id');
+            $familiaId = (int)$request->input('familia_id');
             $query->whereHas('empresa', function($q) use ($familiaId) {
                 $q->where('familia_profesional_id', $familiaId);
             });
