@@ -23,7 +23,7 @@ class DemandantesController extends Controller
             'telefono_movil' => 'required|string|size:9',
             'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')],
             'situacion' => 'required|integer|min:1|max:3',
-            'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
+            'id_familia_profesional' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         Demandante::create([
@@ -35,7 +35,7 @@ class DemandantesController extends Controller
             'telefono_movil' => $request->telefono_movil,
             'email' => $request->email,
             'situacion' => $request->situacion,
-            'familia_profesional_id' => $request->familia_profesional_id
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
     }
 
@@ -50,7 +50,7 @@ class DemandantesController extends Controller
             'telefono_movil' => 'required|string|size:9',
             'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')->ignore($usuario->id, 'id_demandante')],
             'situacion' => 'required|integer|min:1|max:3',
-            'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
+            'id_familia_profesional' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         $demandante = Demandante::where('id_demandante', $usuario->id)->first();
@@ -63,7 +63,7 @@ class DemandantesController extends Controller
             'telefono_movil' => $request->telefono_movil,
             'email' => $request->email,
             'situacion' => $request->situacion,
-            'familia_profesional_id' => $request->familia_profesional_id
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
 
         return response()->json([

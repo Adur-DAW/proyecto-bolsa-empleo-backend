@@ -19,12 +19,12 @@ class TitulosController extends Controller
 
         $request->validate([
             'nombre' => 'required|string|max:45|unique:titulos,nombre',
-            'familia_profesional_id' => 'required|exists:familias_profesionales,id'
+            'id_familia_profesional' => 'required|exists:familias_profesionales,id'
         ]);
 
         $titulo = Titulo::create([
             'nombre' => $request->nombre,
-            'familia_profesional_id' => $request->familia_profesional_id
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
 
         return response()->json([
@@ -62,12 +62,12 @@ class TitulosController extends Controller
 
         $request->validate([
             'nombre' => 'required|string|max:45|unique:titulos,nombre,' . $titulo->id,
-            'familia_profesional_id' => 'required|exists:familias_profesionales,id'
+            'id_familia_profesional' => 'required|exists:familias_profesionales,id'
         ]);
 
         $titulo->update([
             'nombre' => $request->nombre,
-            'familia_profesional_id' => $request->familia_profesional_id
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
 
         return response()->json([

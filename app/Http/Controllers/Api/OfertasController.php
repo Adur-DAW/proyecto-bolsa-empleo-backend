@@ -28,7 +28,7 @@ class OfertasController extends Controller
             'nombre' => 'required|string|max:45',
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
-            'tipo_contrato_id' => 'required|exists:tipos_contrato,id',
+            'id_tipo_contrato' => 'required|exists:tipos_contrato,id',
             'horario' => 'required|string|max:45',
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
@@ -40,7 +40,7 @@ class OfertasController extends Controller
             'nombre' => $request->nombre,
             'fecha_publicacion' => $request->fecha_publicacion,
             'numero_puestos' => $request->numero_puestos,
-            'tipo_contrato_id' => $request->tipo_contrato_id,
+            'id_tipo_contrato' => $request->id_tipo_contrato,
             'horario' => $request->horario,
             'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',
@@ -81,8 +81,8 @@ class OfertasController extends Controller
 
         $this->aplicarFiltros($query, $request);
 
-        $limit = $request->input('limit', 20);
-        $ofertas = $query->paginate($limit);
+        $limite = $request->input('limite', 20);
+        $ofertas = $query->paginate($limite);
 
         $ofertas->getCollection()->transform(function ($oferta) use ($usuario) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
@@ -131,8 +131,8 @@ class OfertasController extends Controller
 
         $this->aplicarFiltros($query, $request);
 
-        $limit = $request->input('limit', 20);
-        $ofertas = $query->paginate($limit);
+        $limite = $request->input('limite', 20);
+        $ofertas = $query->paginate($limite);
 
         $ofertas->getCollection()->transform(function ($oferta) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
@@ -158,8 +158,8 @@ class OfertasController extends Controller
 
         $this->aplicarFiltros($query, $request);
 
-        $limit = $request->input('limit', 20);
-        $ofertas = $query->paginate($limit);
+        $limite = $request->input('limite', 20);
+        $ofertas = $query->paginate($limite);
 
         $ofertas->getCollection()->transform(function ($oferta) use ($usuario) {
             $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
@@ -172,8 +172,8 @@ class OfertasController extends Controller
 
     private function aplicarFiltros($query, Request $request)
     {
-        if ($request->has('empresa_id')) {
-            $query->where('id_empresa', $request->input('empresa_id'));
+        if ($request->has('id_empresa')) {
+            $query->where('id_empresa', $request->input('id_empresa'));
         }
 
         if ($request->has('estado')) {
@@ -185,10 +185,10 @@ class OfertasController extends Controller
             }
         }
 
-        if ($request->has('familia_id')) {
-            $familiaId = (int)$request->input('familia_id');
+        if ($request->has('id_familia')) {
+            $familiaId = (int)$request->input('id_familia');
             $query->whereHas('empresa', function ($q) use ($familiaId) {
-                $q->where('familia_profesional_id', $familiaId);
+                $q->where('id_familia_profesional', $familiaId);
             });
         }
 
@@ -203,8 +203,8 @@ class OfertasController extends Controller
             });
         }
 
-        if ($request->has('sort_by')) {
-            $sort = $request->input('sort_by');
+        if ($request->has('ordenar_por')) {
+            $sort = $request->input('ordenar_por');
             $parts = explode('.', $sort);
             $field = $parts[0];
             $direction = $parts[1] ?? 'desc';
@@ -240,7 +240,7 @@ class OfertasController extends Controller
             'nombre' => 'required|string|max:45',
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
-            'tipo_contrato_id' => 'required|exists:tipos_contrato,id',
+            'id_tipo_contrato' => 'required|exists:tipos_contrato,id',
             'horario' => 'required|string|max:45',
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
@@ -254,7 +254,7 @@ class OfertasController extends Controller
             'nombre' => $request->nombre,
             'fecha_publicacion' => $request->fecha_publicacion,
             'numero_puestos' => $request->numero_puestos,
-            'tipo_contrato_id' => $request->tipo_contrato_id,
+            'id_tipo_contrato' => $request->id_tipo_contrato,
             'horario' => $request->horario,
             'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',

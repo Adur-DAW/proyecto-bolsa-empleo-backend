@@ -20,7 +20,7 @@ class EmpresasController extends Controller
             'nombre' => 'required|string|max:45',
             'localidad' => 'required|string|max:45',
             'telefono' => 'required|string|size:9',
-            'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
+            'id_familia_profesional' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         $empresa = Empresa::create([
@@ -30,7 +30,7 @@ class EmpresasController extends Controller
             'localidad' => $request->localidad,
             'telefono' => $request->telefono,
             'validado' => false,
-            'familia_profesional_id' => $request->familia_profesional_id
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
 
         return response()->json([
@@ -48,7 +48,7 @@ class EmpresasController extends Controller
             'nombre' => 'required|string|max:45',
             'localidad' => 'required|string|max:45',
             'telefono' => 'required|string|size:9',
-            'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
+            'id_familia_profesional' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         $empresa = Empresa::where('id_empresa', $usuario->id)->first();
@@ -63,7 +63,7 @@ class EmpresasController extends Controller
             'nombre' => $request->nombre,
             'localidad' => $request->localidad,
             'telefono' => $request->telefono,
-            'familia_profesional_id' => $request->familia_profesional_id
+            'id_familia_profesional' => $request->id_familia_profesional
         ];
 
         if (isset($url)) {
@@ -129,15 +129,15 @@ class EmpresasController extends Controller
 
         $this->aplicarFiltros($query, $request);
 
-        if ($request->has('sort_by')) {
-            $sort = $request->input('sort_by');
+        if ($request->has('ordenar_por')) {
+            $sort = $request->input('ordenar_por');
 
-            $parts = explode('.', $sort);
-            $field = $parts[0];
-            $direction = $parts[1] ?? 'asc';
+            $partes = explode('.', $sort);
+            $field = $partes[0];
+            $direccion = $partes[1] ?? 'asc';
 
             if (in_array($field, ['nombre', 'localidad', 'ofertas_count', 'vacantes', 'validado'])) {
-                $query->orderBy($field, $direction);
+                $query->orderBy($field, $direccion);
             }
         } else {
             if ($usuario->rol === 'centro') {
@@ -146,14 +146,14 @@ class EmpresasController extends Controller
             $query->orderBy('nombre', 'asc');
         }
 
-        $limit = $request->input('limit', 20);
-        return response()->json($query->paginate($limit));
+        $limite = $request->input('limite', 20);
+        return response()->json($query->paginate($limite));
     }
 
     private function aplicarFiltros($query, Request $request)
     {
-        if ($request->has('familia_id')) {
-            $query->where('familia_profesional_id', (int)$request->input('familia_id'));
+        if ($request->has('id_familia')) {
+            $query->where('id_familia_profesional', (int)$request->input('id_familia'));
         }
 
         if ($request->has('search')) {

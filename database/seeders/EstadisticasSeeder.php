@@ -17,7 +17,7 @@ class EstadisticasSeeder extends Seeder
 {
     public function run()
     {
-        // Limpiar tablas (orden inverso por FKs)
+
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('demandantes_oferta')->truncate();
         DB::table('titulos_oferta')->truncate();
@@ -31,19 +31,19 @@ class EstadisticasSeeder extends Seeder
 
         $faker = \Faker\Factory::create('es_ES');
 
-        // 1. Títulos y Familias
-        // Fetch existing families or create if defaulting (assuming migrations populated them, but safer to fetch)
+
+
         $familiasModel = FamiliaProfesional::all();
-        if($familiasModel->isEmpty()){
-             // Fallback if truncation happened or empty
-             $nombresFamilias = ['Informática', 'Administración', 'Hostelería', 'Sanidad', 'Comercio'];
-             foreach($nombresFamilias as $nom){
-                 FamiliaProfesional::create(['nombre' => $nom]);
-             }
-             $familiasModel = FamiliaProfesional::all();
+        if ($familiasModel->isEmpty()) {
+
+            $nombresFamilias = ['Informática', 'Administración', 'Hostelería', 'Sanidad', 'Comercio'];
+            foreach ($nombresFamilias as $nom) {
+                FamiliaProfesional::create(['nombre' => $nom]);
+            }
+            $familiasModel = FamiliaProfesional::all();
         }
-        
-        $familiasIds = $familiasModel->pluck('id', 'nombre')->toArray(); // ['Nombre' => ID]
+
+        $familiasIds = $familiasModel->pluck('id', 'nombre')->toArray();
         $familiasNames = $familiasModel->pluck('nombre')->toArray();
 
         $titulosIds = [];
@@ -52,14 +52,14 @@ class EstadisticasSeeder extends Seeder
             for ($i = 0; $i < 5; $i++) {
                 $titulosIds[$familia->nombre][] = DB::table('titulos')->insertGetId([
                     'nombre' => $familia->nombre . ' - Grado ' . ($i + 1),
-                    'familia_profesional_id' => $familia->id,
+                    'id_familia_profesional' => $familia->id,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
         }
 
-        // 2. Empresas y Usuarios (200 Empresas)
+
         $empresasIds = [];
         for ($i = 0; $i < 200; $i++) {
             $fechaRegistro = Carbon::now()->subDays(rand(1, 240));
@@ -76,26 +76,26 @@ class EstadisticasSeeder extends Seeder
                 'id_empresa' => $userUrl->id,
                 'nombre' => $faker->company,
                 'cif' => $faker->vat,
-                'localidad' => $faker->randomElement(['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao', 'Zaragoza', 'Malaga', 'Murcia']), 
+                'localidad' => $faker->randomElement(['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao', 'Zaragoza', 'Malaga', 'Murcia']),
                 'telefono' => substr($faker->phoneNumber, 0, 9),
-                'familia_profesional_id' => $faker->randomElement($familiasModel)->id,
+                'id_familia_profesional' => $faker->randomElement($familiasModel)->id,
                 'validado' => 1,
                 'created_at' => $fechaRegistro,
                 'updated_at' => $fechaRegistro
             ]);
             $empresasIds[] = $empresa->id_empresa;
         }
-        
-        // Admin
+
+
         Usuario::create([
             'email' => 'admin@test.com',
             'password' => Hash::make('password'),
             'rol' => 'centro',
-            'created_at' => now(), 
+            'created_at' => now(),
             'updated_at' => now()
         ]);
 
-        // 3. Demandantes (500 Demandantes)
+
         $demandantesIds = [];
         for ($i = 0; $i < 500; $i++) {
             $fechaRegistro = Carbon::now()->subDays(rand(1, 240));
@@ -109,7 +109,7 @@ class EstadisticasSeeder extends Seeder
             ]);
 
             $familiaObj = $faker->randomElement($familiasModel);
-            
+
             $demandante = Demandante::create([
                 'id_demandante' => $userD->id,
                 'dni' => $faker->dni,
@@ -118,14 +118,14 @@ class EstadisticasSeeder extends Seeder
                 'apellido2' => $faker->lastName,
                 'email' => $userD->email,
                 'telefono_movil' => substr($faker->phoneNumber, 0, 9),
-                'familia_profesional_id' => $familiaObj->id,
+                'id_familia_profesional' => $familiaObj->id,
                 'situacion' => 1,
                 'created_at' => $fechaRegistro,
                 'updated_at' => $fechaRegistro
             ]);
             $demandantesIds[] = $demandante->id_demandante;
 
-            // Asignar Título
+
             DB::table('titulos_demandante')->insert([
                 'id_demandante' => $demandante->id_demandante,
                 'id_titulo' => $faker->randomElement($titulosIds[$familiaObj->nombre]),
@@ -135,26 +135,26 @@ class EstadisticasSeeder extends Seeder
             ]);
         }
 
-        // 4. Ofertas (600 Ofertas en 8 meses)
-        
+
+
         $tiposContratoIds = TipoContrato::pluck('id')->toArray();
-        if(empty($tiposContratoIds)) {
-             $t = TipoContrato::create(['nombre' => 'Jornada completa']);
-             $tiposContratoIds[] = $t->id;
+        if (empty($tiposContratoIds)) {
+            $t = TipoContrato::create(['nombre' => 'Jornada completa']);
+            $tiposContratoIds[] = $t->id;
         }
 
         for ($i = 0; $i < 600; $i++) {
             $fechaPub = Carbon::now()->subDays(rand(1, 240));
             $empresaId = $faker->randomElement($empresasIds);
-            
-            $familiaOfertaObj = $faker->randomElement($familiasModel); 
+
+            $familiaOfertaObj = $faker->randomElement($familiasModel);
             $tituloRequerido = $faker->randomElement($titulosIds[$familiaOfertaObj->nombre]);
 
             $oferta = Oferta::create([
                 'nombre' => 'Oferta de ' . $familiaOfertaObj->nombre . ' #' . $i,
                 'fecha_publicacion' => $fechaPub,
                 'numero_puestos' => rand(1, 4),
-                'tipo_contrato_id' => $faker->randomElement($tiposContratoIds),
+                'id_tipo_contrato' => $faker->randomElement($tiposContratoIds),
                 'abierta' => 1,
                 'id_empresa' => $empresaId,
                 'created_at' => $fechaPub,
@@ -168,14 +168,14 @@ class EstadisticasSeeder extends Seeder
                 'updated_at' => $fechaPub
             ]);
 
-            // Generar inscripciones
-            $numInscritos = rand(0, 15); // Más competencia
-            $seAdjudica = rand(0, 10) > 3 && $numInscritos > 0; // 70% probabilidad adjudicar
+
+            $numInscritos = rand(0, 15);
+            $seAdjudica = rand(0, 10) > 3 && $numInscritos > 0;
 
             $candidatos = $faker->randomElements($demandantesIds, $numInscritos);
 
             foreach ($candidatos as $idx => $candId) {
-                $esElElegido = $seAdjudica && $idx === 0; 
+                $esElElegido = $seAdjudica && $idx === 0;
 
                 $adjudicada = $esElElegido ? 1 : 0;
                 $fechaAdj = $esElElegido ? (clone $fechaPub)->addDays(rand(2, 20)) : null;
@@ -184,13 +184,13 @@ class EstadisticasSeeder extends Seeder
                     'id_oferta' => $oferta->id,
                     'id_demandante' => $candId,
                     'adjudicada' => $adjudicada,
-                    'fecha' => $fechaAdj ? $fechaAdj : null, 
-                    'created_at' => (clone $fechaPub)->addDays(rand(0, 2)), 
+                    'fecha' => $fechaAdj ? $fechaAdj : null,
+                    'created_at' => (clone $fechaPub)->addDays(rand(0, 2)),
                     'updated_at' => now()
                 ]);
 
                 if ($esElElegido) {
-                    $oferta->abierta = 0; 
+                    $oferta->abierta = 0;
                     $oferta->save();
                 }
             }

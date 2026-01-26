@@ -40,14 +40,14 @@ class Demandante extends Model
         'apellido2',
         'telefono_movil',
         'email',
-        'familia_profesional_id',
+        'id_familia_profesional',
         'cv_path',
         'situacion'
     ];
 
     public function familiaProfesional()
     {
-        return $this->belongsTo(FamiliaProfesional::class, 'familia_profesional_id');
+        return $this->belongsTo(FamiliaProfesional::class, 'id_familia_profesional');
     }
 
     public function usuario()
