@@ -26,7 +26,7 @@ class DemandantesController extends Controller
             'familia_profesional_id' => 'nullable|exists:familias_profesionales,id'
         ]);
 
-        $demandante = Demandante::create([
+        Demandante::create([
             'id_demandante' => $usuario->id,
             'dni' => $request->dni,
             'nombre' => $request->nombre,

@@ -58,8 +58,7 @@ class JWTAuthController extends Controller
         ]);
 
         try {
-            if ($usuario->rol == 'demandante')
-            {
+            if ($usuario->rol == 'demandante') {
                 $cvPath = null;
                 if ($request->hasFile('cv')) {
                     $cvPath = $request->file('cv')->store('curriculums', 'public');
@@ -79,9 +78,7 @@ class JWTAuthController extends Controller
                 ]);
 
                 $usuario->demandante = $demandante;
-            }
-            elseif ($usuario->rol == 'empresa')
-            {
+            } elseif ($usuario->rol == 'empresa') {
                 $empresa = Empresa::create([
                     'id_empresa' => $usuario->id,
                     'cif' => $request->cif,

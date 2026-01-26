@@ -87,24 +87,22 @@ class EmpresasController extends Controller
 
     public function show($id)
     {
-        // Método público para ver detalles básicos
+
         $empresa = Empresa::with('familiaProfesional')->where('id_empresa', $id)->first();
-        
+
         if (!$empresa) {
             return response()->json(['error' => 'Empresa no encontrada'], 404);
         }
 
-        // Si la empresa no está validada, quizás no deberíamos mostrarla, a menos que sea admin
         if (!$empresa->validado) {
-             // Chequear si es admin (centro) quien pide, o la propia empresa
-             try {
+            try {
                 $user = JWTAuth::parseToken()->authenticate();
                 if ($user->rol !== 'centro' && $user->id !== $empresa->id_empresa) {
-                     return response()->json(['error' => 'Empresa no disponible'], 403);
+                    return response()->json(['error' => 'Empresa no disponible'], 403);
                 }
-             } catch (\Exception) {
-                 return response()->json(['error' => 'Empresa no disponible'], 403);
-             }
+            } catch (\Exception) {
+                return response()->json(['error' => 'Empresa no disponible'], 403);
+            }
         }
 
         return response()->json($empresa);
@@ -115,10 +113,9 @@ class EmpresasController extends Controller
         try {
             $usuario = JWTAuth::parseToken()->authenticate();
         } catch (\Exception) {
-             // Si no hay token, solo mostrar validadas
-             $query = Empresa::where('validado', true)->with('familiaProfesional');
-             $this->aplicarFiltros($query, $request);
-             return $query->get();
+            $query = Empresa::where('validado', true)->with('familiaProfesional');
+            $this->aplicarFiltros($query, $request);
+            return $query->get();
         }
 
         $usuario = JWTAuth::parseToken()->authenticate();
@@ -128,16 +125,13 @@ class EmpresasController extends Controller
 
         if ($usuario->rol !== 'centro') {
             $query->where('validado', true);
-        } else {
-             // Admin sees all, but we can sort by validation if needed, default is mixed or sorted by requested param
         }
 
         $this->aplicarFiltros($query, $request);
 
-        // Sorting
         if ($request->has('sort_by')) {
             $sort = $request->input('sort_by');
-            // Format: field.direction (e.g. nombre.asc, ofertas_count.desc)
+
             $parts = explode('.', $sort);
             $field = $parts[0];
             $direction = $parts[1] ?? 'asc';
@@ -146,34 +140,35 @@ class EmpresasController extends Controller
                 $query->orderBy($field, $direction);
             }
         } else {
-            // Default sort if admin default to validation? Or just name?
-             if ($usuario->rol === 'centro') {
+            if ($usuario->rol === 'centro') {
                 $query->orderBy('validado', 'asc');
-             }
-             $query->orderBy('nombre', 'asc');
+            }
+            $query->orderBy('nombre', 'asc');
         }
 
         $limit = $request->input('limit', 20);
         return response()->json($query->paginate($limit));
     }
 
-    private function aplicarFiltros($query, Request $request) {
+    private function aplicarFiltros($query, Request $request)
+    {
         if ($request->has('familia_id')) {
             $query->where('familia_profesional_id', (int)$request->input('familia_id'));
         }
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nombre', 'like', "%{$search}%")
-                  ->orWhereHas('familiaProfesional', function($qF) use ($search) {
-                      $qF->where('nombre', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('familiaProfesional', function ($qF) use ($search) {
+                        $qF->where('nombre', 'like', "%{$search}%");
+                    });
             });
         }
     }
 
-    public function validar(Request $request, $id) {
+    public function validar(Request $request, $id)
+    {
         $usuario = JWTAuth::parseToken()->authenticate();
 
         if ($usuario->rol !== 'centro') {

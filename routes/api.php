@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\DemandantesOfertaController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Middleware\VerificarOfertasPublicas;
+use App\Http\Controllers\Api\MaestrosController;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
@@ -21,7 +22,6 @@ Route::get('config', [App\Http\Controllers\Api\ConfigController::class, 'obtener
 Route::get('empresas', [EmpresasController::class, 'obtener']);
 Route::get('empresas/{id}', [EmpresasController::class, 'show']);
 Route::get('demandantes', [DemandantesController::class, 'obtener']);
-use App\Http\Controllers\Api\MaestrosController;
 
 Route::get('maestros/familias-profesionales', [MaestrosController::class, 'getFamiliasProfesionales']);
 Route::get('maestros/tipos-contrato', [MaestrosController::class, 'getTiposContrato']);
@@ -30,6 +30,7 @@ Route::middleware([VerificarOfertasPublicas::class])->group(function () {
     Route::get('ofertas', [OfertasController::class, 'obtener']);
     Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
 });
+
 Route::get('ofertas/{id}/titulos', [TitulosOfertaController::class, 'obtenerTitulosPorIdOferta']);
 Route::get('titulos', [TitulosController::class, 'obtener']);
 Route::get('titulos/extra', [TitulosController::class, 'obtenerExtra']);
@@ -40,7 +41,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
     // Obtener usuario autenticado
     Route::get('usuarios/jwt', [JWTAuthController::class, 'obtenerUsuarioJWT']);
-    
+
     // Dashboards por Rol
     Route::get('dashboard/demandante', [DashboardController::class, 'demandante']);
     Route::get('dashboard/empresa', [DashboardController::class, 'empresa']);

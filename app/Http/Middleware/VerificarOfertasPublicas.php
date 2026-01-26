@@ -9,14 +9,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class VerificarOfertasPublicas
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Si las ofertas no son públicas, verificar autenticación
         if (!config('app.ofertas_publicas')) {
             try {
                 JWTAuth::parseToken()->authenticate();

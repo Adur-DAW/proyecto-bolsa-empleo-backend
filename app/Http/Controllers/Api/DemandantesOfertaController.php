@@ -12,10 +12,12 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\Demandante;
 use App\Models\Titulo;
+use Illuminate\Support\Facades\Log;
 
 class DemandantesOfertaController extends Controller
 {
-    public function registrarJWT(Request $request) {
+    public function registrarJWT(Request $request)
+    {
         $usuario = JWTAuth::parseToken()->authenticate();
 
         if ($usuario->rol !== 'demandante') {
@@ -36,8 +38,7 @@ class DemandantesOfertaController extends Controller
             'adjudicada' => false,
             'fecha' => now()
         ]);
-        
-        // Notificar a la empresa
+
         try {
             $oferta = Oferta::find($request->id_oferta);
             if ($oferta) {
@@ -47,7 +48,7 @@ class DemandantesOfertaController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error enviando email a empresa: ' . $e->getMessage());
+            Log::error('Error enviando email a empresa: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -105,15 +106,14 @@ class DemandantesOfertaController extends Controller
             'adjudicada' => true,
             'fecha' => $request->fecha,
         ]);
-        
-        // Notificar al demandante
+
         try {
             $oferta = Oferta::find($request->id_oferta);
             if ($oferta && $demandante->email) {
                 Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error enviando email de adjudicación (registro): ' . $e->getMessage());
+            Log::error('Error enviando email de adjudicación (registro): ' . $e->getMessage());
         }
 
         return response()->json([
@@ -189,15 +189,14 @@ class DemandantesOfertaController extends Controller
         $demandante->ofertas()->updateExistingPivot($id_oferta, [
             'adjudicada' => true
         ]);
-        
-        // Notificar al demandante
+
         try {
             $oferta = Oferta::find($id_oferta);
             if ($oferta && $demandante->email) {
                 Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error enviando email de adjudicación: ' . $e->getMessage());
+            Log::error('Error enviando email de adjudicación: ' . $e->getMessage());
         }
 
         return response()->json([

@@ -12,6 +12,8 @@ use App\Mail\NuevaOfertaMail;
 use App\Mail\OfertaCerradaMail;
 use Illuminate\Support\Facades\Mail;
 
+use Illuminate\Support\Facades\Log;
+
 class OfertasController extends Controller
 {
     public function registrar(Request $request)
@@ -46,8 +48,8 @@ class OfertasController extends Controller
             'fecha_cierre' => $request->fecha_cierre,
             'id_empresa' => $usuario->id
         ]);
-        
-        // Enviar email a demandantes de la misma familia profesional
+
+
         try {
             $empresa = $usuario->empresa;
             if ($empresa && $empresa->familia_profesional) {
@@ -59,7 +61,7 @@ class OfertasController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error enviando email a demandantes: ' . $e->getMessage());
+            Log::error('Error enviando email a demandantes: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -73,7 +75,6 @@ class OfertasController extends Controller
         try {
             $usuario = JWTAuth::parseToken()->authenticate();
         } catch (\Exception) {
-            // Permitido por middleware si es público, o ya autenticado
         }
 
         $query = Oferta::with('empresa', 'tipoContrato');
@@ -85,11 +86,11 @@ class OfertasController extends Controller
 
         $ofertas->getCollection()->transform(function ($oferta) use ($usuario) {
             $oferta->demandantes_inscritos = $oferta->demandantes->count();
-            
+
             if (isset($usuario) && $usuario->rol === 'demandante') {
                 $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
             }
-            
+
             return $oferta;
         });
 
@@ -99,11 +100,11 @@ class OfertasController extends Controller
     public function obtenerPorId($id)
     {
         $oferta = Oferta::with('empresa', 'tipoContrato')->find($id);
-        
+
         if (!$oferta) {
             return response()->json(['error' => 'Oferta no encontrada'], 404);
         }
-        
+
         $oferta->demandantes_inscritos = $oferta->demandantes->count();
 
         try {
@@ -113,7 +114,6 @@ class OfertasController extends Controller
                 $oferta->inscrito = $oferta->demandantes->contains($usuario->demandante->id_demandante);
             }
         } catch (\Exception) {
-            // Permitido por middleware
         }
 
         return response()->json($oferta);
@@ -128,7 +128,7 @@ class OfertasController extends Controller
         }
 
         $query = Oferta::with('empresa')->where('id_empresa', $usuario->id);
-        
+
         $this->aplicarFiltros($query, $request);
 
         $limit = $request->input('limit', 20);
@@ -150,10 +150,8 @@ class OfertasController extends Controller
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        // Obtener títulos del demandante
         $titulosDemandante = $usuario->demandante->titulos->pluck('id_titulo');
 
-        // Obtener ofertas que tengan alguno de los títulos del demandante
         $query = Oferta::whereHas('titulos', function ($query) use ($titulosDemandante) {
             $query->whereIn('id_titulo', $titulosDemandante);
         })->with('empresa', 'titulos');
@@ -172,7 +170,8 @@ class OfertasController extends Controller
         return response()->json($ofertas);
     }
 
-    private function aplicarFiltros($query, Request $request) {
+    private function aplicarFiltros($query, Request $request)
+    {
         if ($request->has('empresa_id')) {
             $query->where('id_empresa', $request->input('empresa_id'));
         }
@@ -188,34 +187,33 @@ class OfertasController extends Controller
 
         if ($request->has('familia_id')) {
             $familiaId = (int)$request->input('familia_id');
-            $query->whereHas('empresa', function($q) use ($familiaId) {
+            $query->whereHas('empresa', function ($q) use ($familiaId) {
                 $q->where('familia_profesional_id', $familiaId);
             });
         }
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nombre', 'like', "%{$search}%")
-                  ->orWhere('obs', 'like', "%{$search}%")
-                  ->orWhereHas('empresa', function($qEmpresa) use ($search) {
-                      $qEmpresa->where('nombre', 'like', "%{$search}%");
-                  });
+                    ->orWhere('obs', 'like', "%{$search}%")
+                    ->orWhereHas('empresa', function ($qEmpresa) use ($search) {
+                        $qEmpresa->where('nombre', 'like', "%{$search}%");
+                    });
             });
         }
 
-        // Sorting
         if ($request->has('sort_by')) {
-             $sort = $request->input('sort_by');
-             $parts = explode('.', $sort);
-             $field = $parts[0];
-             $direction = $parts[1] ?? 'desc'; 
+            $sort = $request->input('sort_by');
+            $parts = explode('.', $sort);
+            $field = $parts[0];
+            $direction = $parts[1] ?? 'desc';
 
-             if (in_array($field, ['fecha_publicacion', 'fecha_cierre', 'numero_puestos', 'nombre'])) {
-                 $query->orderBy($field, $direction);
-             }
+            if (in_array($field, ['fecha_publicacion', 'fecha_cierre', 'numero_puestos', 'nombre'])) {
+                $query->orderBy($field, $direction);
+            }
         } else {
-             $query->orderBy('fecha_publicacion', 'desc');
+            $query->orderBy('fecha_publicacion', 'desc');
         }
     }
 
@@ -229,9 +227,11 @@ class OfertasController extends Controller
         }
 
         $oferta = Oferta::find($id);
+
         if (!$oferta) {
             return response()->json(['error' => 'Oferta no encontrada'], 404);
         }
+
         if ($usuario->id !== $oferta->id_empresa) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
@@ -247,7 +247,7 @@ class OfertasController extends Controller
             'abierta' => 'required|boolean',
             'fecha_cierre' => 'required|date'
         ]);
-        
+
         $estabaAbierta = $oferta->abierta;
 
         $oferta->update([
@@ -261,18 +261,17 @@ class OfertasController extends Controller
             'abierta' => $request->abierta,
             'fecha_cierre' => $request->fecha_cierre
         ]);
-        
-        // Si se cierra la oferta, notificar a los inscritos
+
         try {
             if ($estabaAbierta && !$oferta->abierta) {
                 foreach ($oferta->demandantes as $inscrito) {
                     if ($inscrito->email) {
-                         Mail::to($inscrito->email)->send(new OfertaCerradaMail($oferta, 'cerrada'));
+                        Mail::to($inscrito->email)->send(new OfertaCerradaMail($oferta, 'cerrada'));
                     }
                 }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error enviando email de cierre de oferta: ' . $e->getMessage());
+            Log::error('Error enviando email de cierre de oferta: ' . $e->getMessage());
         }
 
         return response()->json([
