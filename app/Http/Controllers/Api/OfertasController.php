@@ -180,15 +180,15 @@ class OfertasController extends Controller
             $estado = $request->input('estado');
             if ($estado === 'activas') {
                 $query->where('abierta', true);
-            } elseif ($estado === 'cerradas') {
+            } elseif ($estado === 'finalizadas') {
                 $query->where('abierta', false);
             }
         }
 
         if ($request->has('id_familia')) {
-            $idFamilia = (int)$request->input('id_familia');
-            $query->whereHas('empresa', function ($q) use ($idFamilia) {
-                $q->where('id_familia_profesional', $idFamilia);
+            $id_familia = (int)$request->input('id_familia');
+            $query->whereHas('empresa', function ($q) use ($id_familia) {
+                $q->where('id_familia_profesional', $id_familia);
             });
         }
 
@@ -204,10 +204,10 @@ class OfertasController extends Controller
         }
 
         if ($request->has('ordenar_por')) {
-            $sort = $request->input('ordenar_por');
-            $parts = explode('.', $sort);
-            $field = $parts[0];
-            $direction = $parts[1] ?? 'desc';
+            $orden = $request->input('ordenar_por');
+            $partes_orden = explode('.', $orden);
+            $field = $partes_orden[0];
+            $direction = $partes_orden[1] ?? 'desc';
 
             if (in_array($field, ['fecha_publicacion', 'fecha_cierre', 'numero_puestos', 'nombre'])) {
                 $query->orderBy($field, $direction);

@@ -130,9 +130,9 @@ class EmpresasController extends Controller
         $this->aplicarFiltros($query, $request);
 
         if ($request->has('ordenar_por')) {
-            $sort = $request->input('ordenar_por');
+            $orden = $request->input('ordenar_por');
 
-            $partes = explode('.', $sort);
+            $partes = explode('.', $orden);
             $field = $partes[0];
             $direccion = $partes[1] ?? 'asc';
 
