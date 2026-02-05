@@ -6,40 +6,52 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('ofertas', function (Blueprint $table) {
             $table->string('dias_descanso', 100)->nullable()->after('horario');
+            $table->foreignId('id_tipo_contrato')
+                  ->nullable()
+                  ->after('tipo_contrato')
+                  ->constrained('tipos_contrato');
         });
 
         Schema::table('demandantes', function (Blueprint $table) {
-            $table->string('familia_profesional', 100)->nullable()->after('email');
-            $table->string('cv_path', 255)->nullable()->after('familia_profesional');
+            $table->string('cv_path', 255)->nullable()->after('email');
+            $table->foreignId('id_familia_profesional')
+                  ->nullable()
+                  ->after('email')
+                  ->constrained('familias_profesionales');
         });
 
         Schema::table('empresas', function (Blueprint $table) {
-            $table->string('familia_profesional', 100)->nullable()->after('nombre');
+            $table->foreignId('id_familia_profesional')
+                  ->nullable()
+                  ->after('nombre')
+                  ->constrained('familias_profesionales');
+
+            $table->string('imagen_url')->nullable()->after('nombre');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('ofertas', function (Blueprint $table) {
             $table->dropColumn('dias_descanso');
+            $table->dropForeign(['id_tipo_contrato']);
+            $table->dropColumn('id_tipo_contrato');
         });
 
         Schema::table('demandantes', function (Blueprint $table) {
-            $table->dropColumn(['familia_profesional', 'cv_path']);
+            $table->dropColumn('cv_path');
+            $table->dropForeign(['id_familia_profesional']);
+            $table->dropColumn('id_familia_profesional');
         });
 
         Schema::table('empresas', function (Blueprint $table) {
-            $table->dropColumn('familia_profesional');
+            $table->dropForeign(['id_familia_profesional']);
+            $table->dropColumn('id_familia_profesional');
+            $table->dropColumn('imagen_url');
         });
     }
 };

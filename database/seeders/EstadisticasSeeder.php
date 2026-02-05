@@ -145,7 +145,7 @@ class EstadisticasSeeder extends Seeder
 
         for ($i = 0; $i < 600; $i++) {
             $fechaPub = Carbon::now()->subDays(rand(1, 240));
-            $empresaId = $faker->randomElement($empresasIds);
+            $idEmpresa = $faker->randomElement($empresasIds);
 
             $familiaOfertaObj = $faker->randomElement($familiasModel);
             $tituloRequerido = $faker->randomElement($titulosIds[$familiaOfertaObj->nombre]);
@@ -156,7 +156,7 @@ class EstadisticasSeeder extends Seeder
                 'numero_puestos' => rand(1, 4),
                 'id_tipo_contrato' => $faker->randomElement($tiposContratoIds),
                 'abierta' => 1,
-                'id_empresa' => $empresaId,
+                'id_empresa' => $idEmpresa,
                 'created_at' => $fechaPub,
                 'updated_at' => $fechaPub,
             ]);
