@@ -52,8 +52,8 @@ class OfertasController extends Controller
 
         try {
             $empresa = $usuario->empresa;
-            if ($empresa && $empresa->familia_profesional) {
-                $demandantes = Demandante::where('familia_profesional', $empresa->familia_profesional)->get();
+            if ($empresa && $empresa->id_familia_profesional) {
+                $demandantes = Demandante::where('id_familia_profesional', $empresa->id_familia_profesional)->get();
                 foreach ($demandantes as $demandante) {
                     if ($demandante->email) {
                         Mail::to($demandante->email)->send(new NuevaOfertaMail($oferta));

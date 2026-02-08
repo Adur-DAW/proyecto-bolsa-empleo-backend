@@ -34,7 +34,7 @@ class JWTAuthController extends Controller
                 'telefono_movil' => 'required|string|size:9',
                 'email' => 'required|string|email|max:45|unique:demandantes,email',
                 'situacion' => 'required|integer|min:0|max:1',
-                'familia_profesional' => 'nullable|string|max:100',
+                'id_familia_profesional' => 'nullable|exists:familias_profesionales,id',
                 'cv' => 'nullable|file|mimes:pdf|max:2048'
             ]);
         } elseif ($request->rol === 'empresa') {
@@ -43,7 +43,7 @@ class JWTAuthController extends Controller
                 'nombre' => 'required|string|max:45',
                 'localidad' => 'required|string|max:45',
                 'telefono' => 'required|string|size:9',
-                'familia_profesional' => 'nullable|string|max:100',
+                'id_familia_profesional' => 'nullable|exists:familias_profesionales,id',
             ]);
         }
 
@@ -73,7 +73,7 @@ class JWTAuthController extends Controller
                     'telefono_movil' => $request->telefono_movil,
                     'email' => $request->email,
                     'situacion' => $request->situacion,
-                    'familia_profesional' => $request->familia_profesional,
+                    'id_familia_profesional' => $request->id_familia_profesional,
                     'cv_path' => $cvPath
                 ]);
 
@@ -85,7 +85,7 @@ class JWTAuthController extends Controller
                     'nombre' => $request->nombre,
                     'localidad' => $request->localidad,
                     'telefono' => $request->telefono,
-                    'familia_profesional' => $request->familia_profesional,
+                    'id_familia_profesional' => $request->id_familia_profesional,
                     'validado' => false
                 ]);
 

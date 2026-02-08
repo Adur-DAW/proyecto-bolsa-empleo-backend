@@ -14,8 +14,8 @@
     <p><strong>Email:</strong> {{ $demandante->email }}</p>
     <p><strong>Teléfono:</strong> {{ $demandante->telefono_movil }}</p>
     
-    @if($demandante->familia_profesional)
-        <p><strong>Familia Profesional:</strong> {{ $demandante->familia_profesional }}</p>
+    @if($demandante->familiaProfesional)
+        <p><strong>Familia Profesional:</strong> {{ $demandante->familiaProfesional->nombre }}</p>
     @endif
 
     @if($demandante->cv_path)

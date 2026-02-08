@@ -86,9 +86,9 @@ class AdminController extends Controller
 
         if ($familia) {
             $baseOfertas->whereHas('titulos', function ($q) use ($familia) {
-                $q->where('familia_profesional', $familia);
+                $q->where('id_familia_profesional', $familia);
             });
-            $baseDemandantes->where('familia_profesional', $familia);
+            $baseDemandantes->where('id_familia_profesional', $familia);
         }
 
         $adjudicadas = (clone $baseOfertas)->whereHas('demandantes', function ($q) {
@@ -121,7 +121,7 @@ class AdminController extends Controller
         if ($familia) {
             $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                 ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
-                ->where('titulos.familia_profesional', $familia);
+                ->where('titulos.id_familia_profesional', $familia);
         }
 
         $res = $query->first();
@@ -141,7 +141,7 @@ class AdminController extends Controller
         if ($familia) {
             $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                 ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
-                ->where('titulos.familia_profesional', $familia);
+                ->where('titulos.id_familia_profesional', $familia);
         }
 
         return $query->get();
@@ -165,7 +165,7 @@ class AdminController extends Controller
             $filter = function ($q) use ($familia) {
                 $q->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                     ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
-                    ->where('titulos.familia_profesional', $familia);
+                    ->where('titulos.id_familia_profesional', $familia);
             };
             $filter($queryInscripciones);
             $filter($queryAdjudicadas);
@@ -190,7 +190,7 @@ class AdminController extends Controller
         if ($familia) {
             $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                 ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
-                ->where('titulos.familia_profesional', $familia);
+                ->where('titulos.id_familia_profesional', $familia);
         }
 
         $res = $query->first();
@@ -205,16 +205,17 @@ class AdminController extends Controller
     {
         $query = DB::table('titulos_oferta')
             ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
+            ->join('familias_profesionales', 'titulos.id_familia_profesional', '=', 'familias_profesionales.id')
             ->join('ofertas', 'titulos_oferta.id_oferta', '=', 'ofertas.id')
-            ->select('titulos.nombre', 'titulos.familia_profesional', DB::raw('count(titulos_oferta.id_oferta) as total_ofertas'))
-            ->groupBy('titulos.id', 'titulos.nombre', 'titulos.familia_profesional')
+            ->select('titulos.nombre', 'familias_profesionales.nombre as familia_profesional', DB::raw('count(titulos_oferta.id_oferta) as total_ofertas'))
+            ->groupBy('titulos.id', 'titulos.nombre', 'familias_profesionales.nombre')
             ->orderByDesc('total_ofertas')
             ->limit(8);
 
         if ($inicio && $fin) $query->whereBetween('ofertas.fecha_publicacion', [$inicio, $fin]);
 
         if ($familia) {
-            $query->where('titulos.familia_profesional', $familia);
+            $query->where('titulos.id_familia_profesional', $familia);
         }
 
         return $query->get();
@@ -231,7 +232,7 @@ class AdminController extends Controller
             $groupByD = "DATE_FORMAT(created_at, '%Y-%m')";
             $groupByE = "DATE_FORMAT(created_at, '%Y-%m')";
         } elseif ($agrupacion === 'familia') {
-            $groupByD = "familia_profesional";
+            $groupByD = "familias_profesionales.nombre";
             $groupByE = "'Sin Familia'";
         } elseif ($agrupacion === 'localidad') {
             $groupByD = "'Desconocido'";
@@ -241,16 +242,20 @@ class AdminController extends Controller
         $queryD = Demandante::select(DB::raw("$groupByD as periodo"), DB::raw('count(*) as total'))
             ->groupBy('periodo');
 
+        if ($agrupacion === 'familia') {
+            $queryD->join('familias_profesionales', 'demandantes.id_familia_profesional', '=', 'familias_profesionales.id');
+        }
+
         $queryE = Empresa::select(DB::raw("$groupByE as periodo"), DB::raw('count(*) as total'))
             ->groupBy('periodo');
 
         if ($inicio && $fin) {
-            $queryD->whereBetween('created_at', [$inicio, $fin]);
+            $queryD->whereBetween('demandantes.created_at', [$inicio, $fin]);
             $queryE->whereBetween('created_at', [$inicio, $fin]);
         }
 
         if ($familia) {
-            $queryD->where('familia_profesional', $familia);
+            $queryD->where('id_familia_profesional', $familia);
         }
 
         $demandantes = $queryD->get()->keyBy('periodo');
@@ -277,8 +282,9 @@ class AdminController extends Controller
 
         if ($agrupacion === 'mensual') {
             $groupBy = "DATE_FORMAT(fecha_publicacion, '%Y-%m')";
-        } elseif ($agrupacion === 'familia') {
-            $groupBy = "t.familia_profesional";
+        }
+        if ($agrupacion === 'familia') {
+            $groupBy = "f.nombre";
         } elseif ($agrupacion === 'localidad') {
             $groupBy = "e.localidad";
         }
@@ -287,7 +293,8 @@ class AdminController extends Controller
 
         if ($agrupacion === 'familia') {
             $query->join('titulos_oferta as to', 'ofertas.id', '=', 'to.id_oferta')
-                ->join('titulos as t', 'to.id_titulo', '=', 't.id');
+                ->join('titulos as t', 'to.id_titulo', '=', 't.id')
+                ->join('familias_profesionales as f', 't.id_familia_profesional', '=', 'f.id');
         } elseif ($agrupacion === 'localidad') {
             $query->join('empresas as e', 'ofertas.id_empresa', '=', 'e.id_empresa');
         }
@@ -306,9 +313,9 @@ class AdminController extends Controller
             if ($agrupacion !== 'familia') {
                 $query->join('titulos_oferta as to2', 'ofertas.id', '=', 'to2.id_oferta')
                     ->join('titulos as t2', 'to2.id_titulo', '=', 't2.id')
-                    ->where('t2.familia_profesional', $familia);
+                    ->where('t2.id_familia_profesional', $familia);
             } else {
-                $query->where('t.familia_profesional', $familia);
+                $query->where('t.id_familia_profesional', $familia);
             }
         }
 
@@ -317,14 +324,15 @@ class AdminController extends Controller
 
     private function obtenerTopFamilias($inicio, $fin)
     {
-        $query = Demandante::select('familia_profesional', DB::raw('count(*) as total'))
-            ->whereNotNull('familia_profesional')
-            ->groupBy('familia_profesional')
+        $query = Demandante::join('familias_profesionales', 'demandantes.id_familia_profesional', '=', 'familias_profesionales.id')
+            ->select('familias_profesionales.nombre as familia_profesional', DB::raw('count(*) as total'))
+            ->whereNotNull('demandantes.id_familia_profesional')
+            ->groupBy('familias_profesionales.id', 'familias_profesionales.nombre')
             ->orderByDesc('total')
             ->limit(10);
 
         if ($inicio && $fin) {
-            $query->whereBetween('created_at', [$inicio, $fin]);
+            $query->whereBetween('demandantes.created_at', [$inicio, $fin]);
         }
 
         return $query->get();
@@ -346,7 +354,7 @@ class AdminController extends Controller
         if ($familia) {
             $query->join('titulos_oferta', 'ofertas.id', '=', 'titulos_oferta.id_oferta')
                 ->join('titulos', 'titulos_oferta.id_titulo', '=', 'titulos.id')
-                ->where('titulos.familia_profesional', $familia);
+                ->where('titulos.id_familia_profesional', $familia);
         }
 
         return $query->get();
