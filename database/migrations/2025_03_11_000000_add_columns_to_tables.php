@@ -9,28 +9,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ofertas', function (Blueprint $table) {
-            $table->string('dias_descanso', 100)->nullable()->after('horario');
-            $table->foreignId('id_tipo_contrato')
-                  ->nullable()
-                  ->after('tipo_contrato')
-                  ->constrained('tipos_contrato');
+            if (!Schema::hasColumn('ofertas', 'dias_descanso')) {
+                $table->string('dias_descanso', 100)->nullable()->after('horario');
+            }
+            if (!Schema::hasColumn('ofertas', 'id_tipo_contrato')) {
+                $table->foreignId('id_tipo_contrato')
+                      ->nullable()
+                      ->after('id_empresa')
+                      ->constrained('tipos_contrato');
+            }
         });
 
         Schema::table('demandantes', function (Blueprint $table) {
-            $table->string('cv_path', 255)->nullable()->after('email');
-            $table->foreignId('id_familia_profesional')
-                  ->nullable()
-                  ->after('email')
-                  ->constrained('familias_profesionales');
+            if (!Schema::hasColumn('demandantes', 'cv_path')) {
+                $table->string('cv_path', 255)->nullable()->after('email');
+            }
+            if (!Schema::hasColumn('demandantes', 'id_familia_profesional')) {
+                $table->foreignId('id_familia_profesional')
+                      ->nullable()
+                      ->after('cv_path')
+                      ->constrained('familias_profesionales', 'id');
+            }
         });
 
         Schema::table('empresas', function (Blueprint $table) {
-            $table->foreignId('id_familia_profesional')
-                  ->nullable()
-                  ->after('nombre')
-                  ->constrained('familias_profesionales');
-
-            $table->string('imagen_url')->nullable()->after('nombre');
+            if (!Schema::hasColumn('empresas', 'id_familia_profesional')) {
+                $table->foreignId('id_familia_profesional')
+                      ->nullable()
+                      ->after('nombre')
+                      ->constrained('familias_profesionales', 'id');
+            }
+            if (!Schema::hasColumn('empresas', 'imagen_url')) {
+                $table->string('imagen_url', 191)->nullable()->after('localidad');
+            }
         });
     }
 

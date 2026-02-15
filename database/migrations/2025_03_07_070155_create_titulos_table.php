@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 45)->unique();
             $table->timestamps();
+            $table->foreignId('id_familia_profesional')->nullable()->constrained('familias_profesionales', 'id');
         });
     }
 
