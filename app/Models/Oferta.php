@@ -35,7 +35,8 @@ class Oferta extends Model
         'obs',
         'abierta',
         'fecha_cierre',
-        'id_empresa'
+        'id_empresa',
+        'readme'
     ];
 
     public function empresa()

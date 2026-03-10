@@ -33,7 +33,8 @@ class OfertasController extends Controller
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
-            'fecha_cierre' => 'required|date'
+            'fecha_cierre' => 'required|date',
+            'readme' => 'nullable|string'
         ]);
 
         $oferta = Oferta::create([
@@ -46,7 +47,8 @@ class OfertasController extends Controller
             'obs' => $request->obs ?? '',
             'abierta' => $request->abierta,
             'fecha_cierre' => $request->fecha_cierre,
-            'id_empresa' => $usuario->id
+            'id_empresa' => $usuario->id,
+            'readme' => $request->readme
         ]);
 
 
@@ -156,6 +158,19 @@ class OfertasController extends Controller
             $query->whereIn('id_titulo', $titulosDemandante);
         })->with('empresa', 'titulos');
 
+        if ($request->has('inscrito')) {
+            $inscrito = $request->input('inscrito');
+            if ($inscrito === 'inscritas') {
+                $query->whereHas('demandantes', function ($q) use ($usuario) {
+                    $q->where('demandantes.id_demandante', $usuario->demandante->id_demandante);
+                });
+            } elseif ($inscrito === 'no_inscritas') {
+                $query->whereDoesntHave('demandantes', function ($q) use ($usuario) {
+                    $q->where('demandantes.id_demandante', $usuario->demandante->id_demandante);
+                });
+            }
+        }
+
         $this->aplicarFiltros($query, $request);
 
         $limite = $request->input('limite', 20);
@@ -245,7 +260,8 @@ class OfertasController extends Controller
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
-            'fecha_cierre' => 'required|date'
+            'fecha_cierre' => 'required|date',
+            'readme' => 'nullable|string'
         ]);
 
         $estabaAbierta = $oferta->abierta;
@@ -259,7 +275,8 @@ class OfertasController extends Controller
             'dias_descanso' => $request->dias_descanso,
             'obs' => $request->obs ?? '',
             'abierta' => $request->abierta,
-            'fecha_cierre' => $request->fecha_cierre
+            'fecha_cierre' => $request->fecha_cierre,
+            'readme' => $request->readme
         ]);
 
         try {
