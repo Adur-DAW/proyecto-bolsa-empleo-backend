@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Demandante extends Model
 {
@@ -66,5 +68,19 @@ class Demandante extends Model
         return $this->belongsToMany(Oferta::class, 'demandantes_oferta', 'id_demandante', 'id_oferta')
                     ->withPivot('adjudicada', 'fecha')
                     ->withTimestamps();
+    }
+
+    protected function cvUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->cv_path ? Storage::disk('public')->url($this->cv_path) : null,
+        );
+    }
+
+    protected function imagenUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value ? Storage::disk('public')->url($value) : null,
+        );
     }
 }

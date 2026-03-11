@@ -55,7 +55,12 @@ class DemandantesController extends Controller
 
         $demandante = Demandante::where('id_demandante', $usuario->id)->first();
 
-        $demandante->update([
+        if ($request->hasFile('cv')) {
+            $path = $request->file('cv')->store('curriculums', 'public');
+            $cvPath = $path;
+        }
+
+        $updateData = [
             'dni' => $request->dni,
             'nombre' => $request->nombre,
             'apellido1' => $request->apellido1,
@@ -64,7 +69,13 @@ class DemandantesController extends Controller
             'email' => $request->email,
             'situacion' => $request->situacion,
             'id_familia_profesional' => $request->id_familia_profesional
-        ]);
+        ];
+
+        if (isset($cvPath)) {
+            $updateData['cv_path'] = $cvPath;
+        }
+
+        $demandante->update($updateData);
 
         return response()->json([
             'message' => 'Demandante actualizado con éxito',

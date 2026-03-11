@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Empresa extends Model
 {
@@ -56,5 +58,12 @@ class Empresa extends Model
     public function ofertas()
     {
         return $this->hasMany(Oferta::class, 'id_empresa');
+    }
+
+    protected function imagenUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value ? Storage::disk('public')->url($value) : null,
+        );
     }
 }

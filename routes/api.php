@@ -19,10 +19,6 @@ Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
 Route::get('config', [App\Http\Controllers\Api\ConfigController::class, 'obtenerConfiguracion']);
 
-Route::get('empresas', [EmpresasController::class, 'obtener']);
-Route::get('empresas/{id}', [EmpresasController::class, 'show']);
-Route::get('demandantes', [DemandantesController::class, 'obtener']);
-
 Route::get('maestros/familias-profesionales', [MaestrosController::class, 'getFamiliasProfesionales']);
 Route::get('maestros/tipos-contrato', [MaestrosController::class, 'getTiposContrato']);
 
@@ -56,7 +52,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     // Obtener demandante autenticado
     Route::get('demandantes/jwt', [DemandantesController::class, 'obtenerJWT']);
     // Actualizar demandante autenticado
-    Route::put('demandantes', [DemandantesController::class, 'actualizar']);
+    Route::match(['post', 'put'], 'demandantes', [DemandantesController::class, 'actualizar']);
 
     // Registrar títulos
     Route::post('titulos', [TitulosController::class, 'registrar']);
@@ -77,7 +73,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     // Obtener empresa autenticada
     Route::get('empresas/jwt', [EmpresasController::class, 'obtenerJWT']);
     // Actualizar empresa autenticada
-    Route::put('empresas', [EmpresasController::class, 'actualizar']);
+    Route::match(['post', 'put'], 'empresas', [EmpresasController::class, 'actualizar']);
     // Validar empresa
     Route::put('empresas/{id}/validar', [EmpresasController::class, 'validar']);
     // Eliminar empresa
@@ -124,3 +120,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     // Eliminar demandante de una oferta
     Route::delete('ofertas/{id_oferta}/demandantes/{id_demandante}', [DemandantesOfertaController::class, 'eliminarDemandante']);
 });
+
+Route::get('empresas', [EmpresasController::class, 'obtener']);
+Route::get('empresas/{id}', [EmpresasController::class, 'show']);
+Route::get('demandantes', [DemandantesController::class, 'obtener']);

@@ -52,10 +52,14 @@ class EmpresasController extends Controller
         ]);
 
         $empresa = Empresa::where('id_empresa', $usuario->id)->first();
+        
+        if (!$empresa) {
+            return response()->json(['error' => 'Empresa no encontrada'], 404);
+        }
 
-        if ($request->hasFile('imagen')) {
-            $path = $request->file('imagen')->store('public/empresas');
-            $url = Storage::url($path);
+        $file = $request->file('imagen');
+        if ($file && $file->isValid()) {
+            $url = $file->store('empresas', 'public');
         }
 
         $updateData = [
@@ -80,9 +84,22 @@ class EmpresasController extends Controller
 
     public function obtenerJWT()
     {
-        $usuario = Usuario::with('empresa')->find(JWTAuth::parseToken()->authenticate()->id);
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if (!$user) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
+            }
 
-        return response()->json($usuario->empresa);
+            $usuario = Usuario::with('empresa')->find($user->id);
+
+            if (!$usuario->empresa) {
+                return response()->json(null);
+            }
+
+            return response()->json($usuario->empresa);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function show($id)

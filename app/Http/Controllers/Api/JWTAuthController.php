@@ -136,6 +136,7 @@ class JWTAuthController extends Controller
         if ($usuarioAuth->rol == 'demandante') {
             $usuarioAuth->load('demandante');
             $usuario['nombreCompleto'] = $usuarioAuth->demandante->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->demandante->imagen_url;
         } elseif ($usuarioAuth->rol == 'empresa') {
             $usuarioAuth->load('empresa');
 
@@ -144,6 +145,7 @@ class JWTAuthController extends Controller
             }
 
             $usuario['nombreCompleto'] = $usuarioAuth->empresa->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->empresa->imagen_url;
         } else {
             if ($usuarioAuth->rol == 'centro') {
                 $usuario['nombreCompleto'] = 'Administrador';
@@ -162,11 +164,31 @@ class JWTAuthController extends Controller
     public function obtenerUsuarioJWT()
     {
         try {
-            if (!$usuario = JWTAuth::parseToken()->authenticate()) {
+            if (!$usuarioAuth = JWTAuth::parseToken()->authenticate()) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
         } catch (JWTException $e) {
             return response()->json(['error' => 'Token invalido'], 400);
+        }
+
+        $usuario = [
+            'id' => $usuarioAuth->id,
+            'email' => $usuarioAuth->email,
+            'rol' => $usuarioAuth->rol,
+            'nombreCompleto' => 'Sin especificar'
+        ];
+
+        if ($usuarioAuth->rol == 'demandante') {
+            $usuarioAuth->load('demandante');
+            $usuario['nombreCompleto'] = $usuarioAuth->demandante->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->demandante->imagen_url;
+            $usuario['cvUrl'] = $usuarioAuth->demandante->cv_url;
+        } elseif ($usuarioAuth->rol == 'empresa') {
+            $usuarioAuth->load('empresa');
+            $usuario['nombreCompleto'] = $usuarioAuth->empresa->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->empresa->imagen_url;
+        } elseif ($usuarioAuth->rol == 'centro') {
+            $usuario['nombreCompleto'] = 'Administrador';
         }
 
         return response()->json(compact('usuario'));
