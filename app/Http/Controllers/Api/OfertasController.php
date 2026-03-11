@@ -29,11 +29,11 @@ class OfertasController extends Controller
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
             'id_tipo_contrato' => 'required|exists:tipos_contrato,id',
-            'horario' => 'required|string|max:45',
+            'horario' => 'nullable|string|max:45',
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
-            'fecha_cierre' => 'required|date',
+            'fecha_cierre' => 'nullable|date',
             'readme' => 'nullable|string'
         ]);
 
@@ -256,11 +256,11 @@ class OfertasController extends Controller
             'fecha_publicacion' => 'required|date',
             'numero_puestos' => 'required|int',
             'id_tipo_contrato' => 'required|exists:tipos_contrato,id',
-            'horario' => 'required|string|max:45',
+            'horario' => 'nullable|string|max:45',
             'dias_descanso' => 'nullable|string|max:100',
             'obs' => 'nullable|string|max:255',
             'abierta' => 'required|boolean',
-            'fecha_cierre' => 'required|date',
+            'fecha_cierre' => 'nullable|date',
             'readme' => 'nullable|string'
         ]);
 
