@@ -53,6 +53,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('demandantes/jwt', [DemandantesController::class, 'obtenerJWT']);
     // Actualizar demandante autenticado
     Route::match(['post', 'put'], 'demandantes', [DemandantesController::class, 'actualizar']);
+    // Obtener demandante por ID
+    Route::get('demandantes/{id}', [DemandantesController::class, 'obtenerPorId']);
     // Descargar CV
     Route::get('demandantes/{id}/cv', [DemandantesController::class, 'descargarCv']);
 
@@ -117,6 +119,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('ofertas/{id}/demandantes/posibles', [DemandantesOfertaController::class, 'obtenerDemandantesContieneTitulacionPorIdOferta']);
     // Adjudicar oferta a demandante
     Route::put('ofertas/{id_oferta}/demandantes/{id_demandante}/adjudicar', [DemandantesOfertaController::class, 'adjudicarOferta']);
+    // Rechazar demandante de una oferta
+    Route::put('ofertas/{id_oferta}/demandantes/{id_demandante}/rechazar', [DemandantesOfertaController::class, 'rechazarDemandante']);
     // Inscribir y adjudicar oferta a demandante
     Route::post('ofertas/demandantes', [DemandantesOfertaController::class, 'registrarDemandanteYAdjudicar']);
     // Eliminar demandante de una oferta

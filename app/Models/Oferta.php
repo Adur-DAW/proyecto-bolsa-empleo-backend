@@ -56,7 +56,7 @@ class Oferta extends Model
     public function demandantes()
     {
         return $this->belongsToMany(Demandante::class, 'demandantes_oferta', 'id_oferta', 'id_demandante')
-                    ->withPivot('adjudicada', 'fecha')
+                    ->withPivot('adjudicada', 'rechazada', 'fecha')
                     ->withTimestamps();
     }
 }

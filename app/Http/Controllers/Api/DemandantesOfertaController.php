@@ -140,6 +140,12 @@ class DemandantesOfertaController extends Controller
                 ->pivot
                 ->adjudicada;
 
+            $demandante->rechazada = $demandante->ofertas()
+                ->where('id_oferta', $id_oferta)
+                ->first()
+                ->pivot
+                ->rechazada;
+
             return $demandante;
         });
 
@@ -169,6 +175,7 @@ class DemandantesOfertaController extends Controller
         $demandantes = $demandantes->map(function ($demandante) use ($id_oferta) {
             $oferta = $demandante->ofertas()->where('id_oferta', $id_oferta)->first();
             $demandante->adjudicado = $oferta ? $oferta->pivot->adjudicada : false;
+            $demandante->rechazada = $oferta ? $oferta->pivot->rechazada : false;
 
             return $demandante;
         });
@@ -201,6 +208,29 @@ class DemandantesOfertaController extends Controller
 
         return response()->json([
             'message' => 'Se ha adjudicado la oferta al demandante'
+        ]);
+    }
+
+    public function rechazarDemandante($id_oferta, $id_demandante)
+    {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol !== 'empresa') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $demandante = Demandante::find($id_demandante);
+
+        if (!$demandante) {
+            return response()->json(['error' => 'No se ha encontrado el demandante'], 404);
+        }
+
+        $demandante->ofertas()->updateExistingPivot($id_oferta, [
+            'rechazada' => true
+        ]);
+
+        return response()->json([
+            'message' => 'Se ha rechazado al demandante correctamente'
         ]);
     }
 

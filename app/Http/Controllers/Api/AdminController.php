@@ -322,7 +322,7 @@ class AdminController extends Controller
         return $query->get();
     }
 
-    private function obtenerTopFamilias($inicio, $fin)
+    private function obtenerTopFamilias($inicio, $fin, $familia = null)
     {
         $query = Demandante::join('familias_profesionales', 'demandantes.id_familia_profesional', '=', 'familias_profesionales.id')
             ->select('familias_profesionales.nombre as familia_profesional', DB::raw('count(*) as total'))
@@ -333,6 +333,10 @@ class AdminController extends Controller
 
         if ($inicio && $fin) {
             $query->whereBetween('demandantes.created_at', [$inicio, $fin]);
+        }
+
+        if ($familia) {
+            $query->where('demandantes.id_familia_profesional', $familia);
         }
 
         return $query->get();

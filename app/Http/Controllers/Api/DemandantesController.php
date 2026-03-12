@@ -90,6 +90,25 @@ class DemandantesController extends Controller
         return response()->json($usuario->demandante);
     }
 
+    public function obtenerPorId($id)
+    {
+        $usuarioAutenticado = JWTAuth::parseToken()->authenticate();
+
+        if ($usuarioAutenticado->rol !== 'centro' && $usuarioAutenticado->rol !== 'empresa') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $demandante = Demandante::with('titulos.titulo', 'familiaProfesional')
+            ->where('id_demandante', $id)
+            ->first();
+
+        if (!$demandante) {
+            return response()->json(['error' => 'Demandante no encontrado'], 404);
+        }
+
+        return response()->json($demandante);
+    }
+
     public function descargarCv($id)
     {
         $usuarioAutenticado = JWTAuth::parseToken()->authenticate();
