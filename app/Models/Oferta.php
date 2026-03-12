@@ -29,17 +29,24 @@ class Oferta extends Model
         'nombre',
         'fecha_publicacion',
         'numero_puestos',
-        'tipo_contrato',
+        'id_tipo_contrato',
         'horario',
+        'dias_descanso',
         'obs',
         'abierta',
         'fecha_cierre',
-        'id_empresa'
+        'id_empresa',
+        'readme'
     ];
 
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'id_empresa');
+    }
+
+    public function tipoContrato()
+    {
+        return $this->belongsTo(TipoContrato::class, 'id_tipo_contrato');
     }
 
     public function titulos() {
@@ -49,7 +56,7 @@ class Oferta extends Model
     public function demandantes()
     {
         return $this->belongsToMany(Demandante::class, 'demandantes_oferta', 'id_oferta', 'id_demandante')
-                    ->withPivot('adjudicada', 'fecha')
+                    ->withPivot('adjudicada', 'rechazada', 'fecha')
                     ->withTimestamps();
     }
 }

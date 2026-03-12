@@ -18,11 +18,13 @@ class TitulosController extends Controller
         }
 
         $request->validate([
-            'nombre' => 'required|string|max:45|unique:titulos,nombre'
+            'nombre' => 'required|string|max:45|unique:titulos,nombre',
+            'id_familia_profesional' => 'required|exists:familias_profesionales,id'
         ]);
 
         $titulo = Titulo::create([
-            'nombre' => $request->nombre
+            'nombre' => $request->nombre,
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
 
         return response()->json([
@@ -33,7 +35,7 @@ class TitulosController extends Controller
 
     public function obtener()
     {
-        $titulos = Titulo::all();
+        $titulos = Titulo::with('familiaProfesional')->get();
 
         return response()->json($titulos);
     }
@@ -59,11 +61,13 @@ class TitulosController extends Controller
         }
 
         $request->validate([
-            'nombre' => 'required|string|max:45|unique:titulos,nombre,' . $titulo->id
+            'nombre' => 'required|string|max:45|unique:titulos,nombre,' . $titulo->id,
+            'id_familia_profesional' => 'required|exists:familias_profesionales,id'
         ]);
 
         $titulo->update([
-            'nombre' => $request->nombre
+            'nombre' => $request->nombre,
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
 
         return response()->json([

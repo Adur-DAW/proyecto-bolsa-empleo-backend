@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('titulos', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre', 45)->unique();
-            $table->timestamps();
-            $table->foreignId('id_familia_profesional')->nullable()->constrained('familias_profesionales', 'id');
+        Schema::table('ofertas', function (Blueprint $table) {
+            $table->longText('readme')->nullable();
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('titulos');
+        Schema::table('ofertas', function (Blueprint $table) {
+            $table->dropColumn('readme');
+        });
     }
 };

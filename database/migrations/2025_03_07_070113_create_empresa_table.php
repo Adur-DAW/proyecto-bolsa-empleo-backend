@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('nombre', 45);
             $table->string('localidad', 45);
             $table->string('telefono', 9);
+            $table->string('imagen_url', 191)->nullable();
+            $table->foreignId('id_familia_profesional')->nullable()->constrained('familias_profesionales', 'id');
             $table->timestamps();
         });
     }

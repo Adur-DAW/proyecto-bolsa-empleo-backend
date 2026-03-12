@@ -3,14 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Demandante;
-use App\Models\Titulo;
+use App\Models\Oferta;
+use App\Models\Usuario;
+use App\Mail\NuevaInscripcionMail;
+use App\Mail\OfertaCerradaMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\Demandante;
+use App\Models\Titulo;
+use Illuminate\Support\Facades\Log;
 
 class DemandantesOfertaController extends Controller
 {
-    public function registrarJWT(Request $request) {
+    public function registrarJWT(Request $request)
+    {
         $usuario = JWTAuth::parseToken()->authenticate();
 
         if ($usuario->rol !== 'demandante') {
@@ -31,6 +38,18 @@ class DemandantesOfertaController extends Controller
             'adjudicada' => false,
             'fecha' => now()
         ]);
+
+        try {
+            $oferta = Oferta::find($request->id_oferta);
+            if ($oferta) {
+                $usuarioEmpresa = Usuario::find($oferta->id_empresa);
+                if ($usuarioEmpresa && $usuarioEmpresa->email) {
+                    Mail::to($usuarioEmpresa->email)->send(new NuevaInscripcionMail($oferta, $demandante));
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error enviando email a empresa: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Se ha inscrito en la oferta correctamente'
@@ -88,6 +107,15 @@ class DemandantesOfertaController extends Controller
             'fecha' => $request->fecha,
         ]);
 
+        try {
+            $oferta = Oferta::find($request->id_oferta);
+            if ($oferta && $demandante->email) {
+                Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'invitacion'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Error enviando email de adjudicación (registro): ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Se ha adjudicado a la oferta correctamente'
         ], 201);
@@ -111,6 +139,12 @@ class DemandantesOfertaController extends Controller
                 ->first()
                 ->pivot
                 ->adjudicada;
+
+            $demandante->rechazada = $demandante->ofertas()
+                ->where('id_oferta', $id_oferta)
+                ->first()
+                ->pivot
+                ->rechazada;
 
             return $demandante;
         });
@@ -141,6 +175,7 @@ class DemandantesOfertaController extends Controller
         $demandantes = $demandantes->map(function ($demandante) use ($id_oferta) {
             $oferta = $demandante->ofertas()->where('id_oferta', $id_oferta)->first();
             $demandante->adjudicado = $oferta ? $oferta->pivot->adjudicada : false;
+            $demandante->rechazada = $oferta ? $oferta->pivot->rechazada : false;
 
             return $demandante;
         });
@@ -162,8 +197,40 @@ class DemandantesOfertaController extends Controller
             'adjudicada' => true
         ]);
 
+        try {
+            $oferta = Oferta::find($id_oferta);
+            if ($oferta && $demandante->email) {
+                Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Error enviando email de adjudicación: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Se ha adjudicado la oferta al demandante'
+        ]);
+    }
+
+    public function rechazarDemandante($id_oferta, $id_demandante)
+    {
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if ($usuario->rol !== 'empresa') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $demandante = Demandante::find($id_demandante);
+
+        if (!$demandante) {
+            return response()->json(['error' => 'No se ha encontrado el demandante'], 404);
+        }
+
+        $demandante->ofertas()->updateExistingPivot($id_oferta, [
+            'rechazada' => true
+        ]);
+
+        return response()->json([
+            'message' => 'Se ha rechazado al demandante correctamente'
         ]);
     }
 

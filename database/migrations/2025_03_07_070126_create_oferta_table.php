@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('obs', 45)->nullable();
             $table->tinyInteger('abierta')->nullable();
             $table->date('fecha_cierre')->nullable();
-            $table->foreignId('id_empresa')->constrained('empresa');
+            $table->foreignId('id_empresa')->constrained('empresas', 'id_empresa');
+            $table->foreignId('id_tipo_contrato')->nullable()->constrained('tipos_contrato');
             $table->timestamps();
         });
     }

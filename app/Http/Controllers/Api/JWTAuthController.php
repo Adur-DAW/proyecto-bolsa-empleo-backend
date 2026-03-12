@@ -34,6 +34,8 @@ class JWTAuthController extends Controller
                 'telefono_movil' => 'required|string|size:9',
                 'email' => 'required|string|email|max:45|unique:demandantes,email',
                 'situacion' => 'required|integer|min:0|max:1',
+                'id_familia_profesional' => 'nullable|exists:familias_profesionales,id',
+                'cv' => 'nullable|file|mimes:pdf|max:2048'
             ]);
         } elseif ($request->rol === 'empresa') {
             $reglas = array_merge($reglas, [
@@ -41,6 +43,7 @@ class JWTAuthController extends Controller
                 'nombre' => 'required|string|max:45',
                 'localidad' => 'required|string|max:45',
                 'telefono' => 'required|string|size:9',
+                'id_familia_profesional' => 'nullable|exists:familias_profesionales,id',
             ]);
         }
 
@@ -55,8 +58,12 @@ class JWTAuthController extends Controller
         ]);
 
         try {
-            if ($usuario->rol == 'demandante')
-            {
+            if ($usuario->rol == 'demandante') {
+                $cvPath = null;
+                if ($request->hasFile('cv')) {
+                    $cvPath = $request->file('cv')->store('curriculums', 'public');
+                }
+
                 $demandante = Demandante::create([
                     'id_demandante' => $usuario->id,
                     'dni' => $request->dni,
@@ -66,18 +73,19 @@ class JWTAuthController extends Controller
                     'telefono_movil' => $request->telefono_movil,
                     'email' => $request->email,
                     'situacion' => $request->situacion,
+                    'id_familia_profesional' => $request->id_familia_profesional,
+                    'cv_path' => $cvPath
                 ]);
 
                 $usuario->demandante = $demandante;
-            }
-            elseif ($usuario->rol == 'empresa')
-            {
+            } elseif ($usuario->rol == 'empresa') {
                 $empresa = Empresa::create([
                     'id_empresa' => $usuario->id,
                     'cif' => $request->cif,
                     'nombre' => $request->nombre,
                     'localidad' => $request->localidad,
                     'telefono' => $request->telefono,
+                    'id_familia_profesional' => $request->id_familia_profesional,
                     'validado' => false
                 ]);
 
@@ -128,6 +136,7 @@ class JWTAuthController extends Controller
         if ($usuarioAuth->rol == 'demandante') {
             $usuarioAuth->load('demandante');
             $usuario['nombreCompleto'] = $usuarioAuth->demandante->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->demandante->imagen_url;
         } elseif ($usuarioAuth->rol == 'empresa') {
             $usuarioAuth->load('empresa');
 
@@ -136,6 +145,7 @@ class JWTAuthController extends Controller
             }
 
             $usuario['nombreCompleto'] = $usuarioAuth->empresa->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->empresa->imagen_url;
         } else {
             if ($usuarioAuth->rol == 'centro') {
                 $usuario['nombreCompleto'] = 'Administrador';
@@ -154,11 +164,31 @@ class JWTAuthController extends Controller
     public function obtenerUsuarioJWT()
     {
         try {
-            if (!$usuario = JWTAuth::parseToken()->authenticate()) {
+            if (!$usuarioAuth = JWTAuth::parseToken()->authenticate()) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
         } catch (JWTException $e) {
             return response()->json(['error' => 'Token invalido'], 400);
+        }
+
+        $usuario = [
+            'id' => $usuarioAuth->id,
+            'email' => $usuarioAuth->email,
+            'rol' => $usuarioAuth->rol,
+            'nombreCompleto' => 'Sin especificar'
+        ];
+
+        if ($usuarioAuth->rol == 'demandante') {
+            $usuarioAuth->load('demandante');
+            $usuario['nombreCompleto'] = $usuarioAuth->demandante->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->demandante->imagen_url;
+            $usuario['cvUrl'] = $usuarioAuth->demandante->cv_url;
+        } elseif ($usuarioAuth->rol == 'empresa') {
+            $usuarioAuth->load('empresa');
+            $usuario['nombreCompleto'] = $usuarioAuth->empresa->nombre ?? 'Sin nombre';
+            $usuario['imagenUrl'] = $usuarioAuth->empresa->imagen_url;
+        } elseif ($usuarioAuth->rol == 'centro') {
+            $usuario['nombreCompleto'] = 'Administrador';
         }
 
         return response()->json(compact('usuario'));

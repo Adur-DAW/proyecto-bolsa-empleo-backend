@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('apuntados_oferta', function (Blueprint $table) {
-            $table->foreignId('id_oferta')->constrained('oferta');
-            $table->foreignId('id_demandante')->constrained('demandante');
+        Schema::create('demandantes_oferta', function (Blueprint $table) {
+            $table->foreignId('id_oferta')->constrained('ofertas');
+            $table->foreignId('id_demandante')->constrained('demandantes', 'id_demandante');
             $table->boolean('adjudicada')->default(false);
             $table->date('fecha')->nullable();
             $table->primary(['id_oferta', 'id_demandante']);
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('apuntados_oferta');
+        Schema::dropIfExists('demandantes_oferta');
     }
 };

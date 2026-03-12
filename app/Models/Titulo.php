@@ -27,7 +27,13 @@ class Titulo extends Model
      */
     protected $fillable = [
         'nombre',
+        'id_familia_profesional'
     ];
+
+    public function familiaProfesional()
+    {
+        return $this->belongsTo(FamiliaProfesional::class, 'id_familia_profesional');
+    }
 
     public function demandantes()
     {

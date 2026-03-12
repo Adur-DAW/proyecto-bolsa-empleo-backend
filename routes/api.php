@@ -9,31 +9,54 @@ use App\Http\Controllers\Api\OfertasController;
 use App\Http\Controllers\Api\TitulosController;
 use App\Http\Controllers\Api\TitulosDemandanteController;
 use App\Http\Controllers\Api\TitulosOfertaController;
-    use App\Http\Controllers\Api\DemandantesOfertaController;
+use App\Http\Controllers\Api\DemandantesOfertaController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Middleware\VerificarOfertasPublicas;
+use App\Http\Controllers\Api\MaestrosController;
 
 Route::post('registrar', [JWTAuthController::class, 'registrar']);
 Route::post('login', [JWTAuthController::class, 'login']);
+Route::get('config', [App\Http\Controllers\Api\ConfigController::class, 'obtenerConfiguracion']);
 
-Route::get('empresas', [EmpresasController::class, 'obtener']);
-Route::get('demandantes', [DemandantesController::class, 'obtener']);
-Route::get('ofertas', [OfertasController::class, 'obtener']);
-Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
+Route::get('maestros/familias-profesionales', [MaestrosController::class, 'getFamiliasProfesionales']);
+Route::get('maestros/tipos-contrato', [MaestrosController::class, 'getTiposContrato']);
+
+Route::middleware([VerificarOfertasPublicas::class])->group(function () {
+    Route::get('ofertas', [OfertasController::class, 'obtener']);
+    Route::get('ofertas/{id}', [OfertasController::class, 'obtenerPorId']);
+});
+
 Route::get('ofertas/{id}/titulos', [TitulosOfertaController::class, 'obtenerTitulosPorIdOferta']);
 Route::get('titulos', [TitulosController::class, 'obtener']);
 Route::get('titulos/extra', [TitulosController::class, 'obtenerExtra']);
+Route::get('dashboard/invitado', [DashboardController::class, 'invitado']);
 Route::get('refrescar', [JWTAuthController::class, 'refrescarToken']);
 
 Route::middleware([JwtMiddleware::class])->group(function () {
 
     // Obtener usuario autenticado
     Route::get('usuarios/jwt', [JWTAuthController::class, 'obtenerUsuarioJWT']);
+
+    // Dashboards por Rol
+    Route::get('dashboard/demandante', [DashboardController::class, 'demandante']);
+    Route::get('dashboard/empresa', [DashboardController::class, 'empresa']);
+    Route::get('dashboard/admin', [DashboardController::class, 'admin']);
+
+    // Admin stats
+    Route::get('admin/stats', [AdminController::class, 'obtenerEstadisticas']);
+
     // Cerrar sesión
     Route::post('cerrar-sesion', [JWTAuthController::class, 'cerrarSesion']);
 
     // Obtener demandante autenticado
     Route::get('demandantes/jwt', [DemandantesController::class, 'obtenerJWT']);
     // Actualizar demandante autenticado
-    Route::put('demandantes', [DemandantesController::class, 'actualizar']);
+    Route::match(['post', 'put'], 'demandantes', [DemandantesController::class, 'actualizar']);
+    // Obtener demandante por ID
+    Route::get('demandantes/{id}', [DemandantesController::class, 'obtenerPorId']);
+    // Descargar CV
+    Route::get('demandantes/{id}/cv', [DemandantesController::class, 'descargarCv']);
 
     // Registrar títulos
     Route::post('titulos', [TitulosController::class, 'registrar']);
@@ -54,7 +77,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     // Obtener empresa autenticada
     Route::get('empresas/jwt', [EmpresasController::class, 'obtenerJWT']);
     // Actualizar empresa autenticada
-    Route::put('empresas', [EmpresasController::class, 'actualizar']);
+    Route::match(['post', 'put'], 'empresas', [EmpresasController::class, 'actualizar']);
     // Validar empresa
     Route::put('empresas/{id}/validar', [EmpresasController::class, 'validar']);
     // Eliminar empresa
@@ -96,8 +119,14 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('ofertas/{id}/demandantes/posibles', [DemandantesOfertaController::class, 'obtenerDemandantesContieneTitulacionPorIdOferta']);
     // Adjudicar oferta a demandante
     Route::put('ofertas/{id_oferta}/demandantes/{id_demandante}/adjudicar', [DemandantesOfertaController::class, 'adjudicarOferta']);
+    // Rechazar demandante de una oferta
+    Route::put('ofertas/{id_oferta}/demandantes/{id_demandante}/rechazar', [DemandantesOfertaController::class, 'rechazarDemandante']);
     // Inscribir y adjudicar oferta a demandante
     Route::post('ofertas/demandantes', [DemandantesOfertaController::class, 'registrarDemandanteYAdjudicar']);
     // Eliminar demandante de una oferta
     Route::delete('ofertas/{id_oferta}/demandantes/{id_demandante}', [DemandantesOfertaController::class, 'eliminarDemandante']);
 });
+
+Route::get('empresas', [EmpresasController::class, 'obtener']);
+Route::get('empresas/{id}', [EmpresasController::class, 'show']);
+Route::get('demandantes', [DemandantesController::class, 'obtener']);

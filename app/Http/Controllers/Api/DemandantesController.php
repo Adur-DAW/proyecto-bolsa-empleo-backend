@@ -23,9 +23,10 @@ class DemandantesController extends Controller
             'telefono_movil' => 'required|string|size:9',
             'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')],
             'situacion' => 'required|integer|min:1|max:3',
+            'id_familia_profesional' => 'nullable|exists:familias_profesionales,id'
         ]);
 
-        $demandante = Demandante::create([
+        Demandante::create([
             'id_demandante' => $usuario->id,
             'dni' => $request->dni,
             'nombre' => $request->nombre,
@@ -34,12 +35,8 @@ class DemandantesController extends Controller
             'telefono_movil' => $request->telefono_movil,
             'email' => $request->email,
             'situacion' => $request->situacion,
+            'id_familia_profesional' => $request->id_familia_profesional
         ]);
-
-        return response()->json([
-            'message' => 'Demandante registrado con éxito',
-            'demandante' => $demandante
-        ], 201);
     }
 
     public function actualizar(Request $request) {
@@ -53,11 +50,17 @@ class DemandantesController extends Controller
             'telefono_movil' => 'required|string|size:9',
             'email' => ['required', 'string', 'email', 'max:45', Rule::unique('demandantes')->ignore($usuario->id, 'id_demandante')],
             'situacion' => 'required|integer|min:1|max:3',
+            'id_familia_profesional' => 'nullable|exists:familias_profesionales,id'
         ]);
 
         $demandante = Demandante::where('id_demandante', $usuario->id)->first();
 
-        $demandante->update([
+        if ($request->hasFile('cv')) {
+            $path = $request->file('cv')->store('curriculums', 'public');
+            $cvPath = $path;
+        }
+
+        $updateData = [
             'dni' => $request->dni,
             'nombre' => $request->nombre,
             'apellido1' => $request->apellido1,
@@ -65,7 +68,14 @@ class DemandantesController extends Controller
             'telefono_movil' => $request->telefono_movil,
             'email' => $request->email,
             'situacion' => $request->situacion,
-        ]);
+            'id_familia_profesional' => $request->id_familia_profesional
+        ];
+
+        if (isset($cvPath)) {
+            $updateData['cv_path'] = $cvPath;
+        }
+
+        $demandante->update($updateData);
 
         return response()->json([
             'message' => 'Demandante actualizado con éxito',
@@ -80,10 +90,40 @@ class DemandantesController extends Controller
         return response()->json($usuario->demandante);
     }
 
-    public function obtener()
+    public function obtenerPorId($id)
     {
-        $demandantes = Demandante::all();
+        $usuarioAutenticado = JWTAuth::parseToken()->authenticate();
 
-        return response()->json($demandantes);
+        if ($usuarioAutenticado->rol !== 'centro' && $usuarioAutenticado->rol !== 'empresa') {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $demandante = Demandante::with('titulos.titulo', 'familiaProfesional')
+            ->where('id_demandante', $id)
+            ->first();
+
+        if (!$demandante) {
+            return response()->json(['error' => 'Demandante no encontrado'], 404);
+        }
+
+        return response()->json($demandante);
+    }
+
+    public function descargarCv($id)
+    {
+        $usuarioAutenticado = JWTAuth::parseToken()->authenticate();
+        $demandante = Demandante::where('id_demandante', $id)->first();
+
+        if (!$demandante || !$demandante->cv_path) {
+            return response()->json(['error' => 'CV no encontrado'], 404);
+        }
+
+        if ($usuarioAutenticado->rol !== 'centro' && 
+            $usuarioAutenticado->rol !== 'empresa' && 
+            $usuarioAutenticado->id !== $demandante->id_demandante) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        return response()->download(storage_path("app/public/{$demandante->cv_path}"));
     }
 }

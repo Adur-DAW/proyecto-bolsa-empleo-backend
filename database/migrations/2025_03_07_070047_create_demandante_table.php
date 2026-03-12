@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('telefono_movil', 9);
             $table->string('email', 45);
             $table->tinyInteger('situacion');
+            $table->string('cv_path', 255)->nullable();
+            $table->foreignId('id_familia_profesional')->nullable()->constrained('familias_profesionales', 'id')->onDelete('set null');
             $table->timestamps();
         });
     }

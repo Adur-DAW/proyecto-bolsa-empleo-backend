@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Demandante extends Model
 {
@@ -21,20 +23,34 @@ class Demandante extends Model
     protected $primaryKey = 'id_demandante';
 
     /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
     protected $fillable = [
         'id_demandante',
-        'email',
         'dni',
         'nombre',
         'apellido1',
         'apellido2',
         'telefono_movil',
+        'email',
+        'id_familia_profesional',
+        'cv_path',
         'situacion'
     ];
+
+    public function familiaProfesional()
+    {
+        return $this->belongsTo(FamiliaProfesional::class, 'id_familia_profesional');
+    }
 
     public function usuario()
     {
@@ -50,7 +66,21 @@ class Demandante extends Model
     public function ofertas()
     {
         return $this->belongsToMany(Oferta::class, 'demandantes_oferta', 'id_demandante', 'id_oferta')
-                    ->withPivot('adjudicada', 'fecha')
+                    ->withPivot('adjudicada', 'rechazada', 'fecha')
                     ->withTimestamps();
+    }
+
+    protected function cvUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->cv_path ? "/api/demandantes/{$this->id_demandante}/cv" : null,
+        );
+    }
+
+    protected function imagenUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value ? asset("storage/{$value}") : null,
+        );
     }
 }
