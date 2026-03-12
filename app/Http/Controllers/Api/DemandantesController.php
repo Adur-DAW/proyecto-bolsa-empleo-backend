@@ -118,7 +118,6 @@ class DemandantesController extends Controller
             return response()->json(['error' => 'CV no encontrado'], 404);
         }
 
-        // Seguridad: Solo el propio demandante, admins (centro) o empresas pueden ver CVs
         if ($usuarioAutenticado->rol !== 'centro' && 
             $usuarioAutenticado->rol !== 'empresa' && 
             $usuarioAutenticado->id !== $demandante->id_demandante) {
