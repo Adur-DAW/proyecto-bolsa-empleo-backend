@@ -73,14 +73,14 @@ class Demandante extends Model
     protected function cvUrl(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->cv_path ? Storage::disk('public')->url($this->cv_path) : null,
+            get: fn () => $this->cv_path ? "/api/demandantes/{$this->id_demandante}/cv" : null,
         );
     }
 
     protected function imagenUrl(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => $value ? Storage::disk('public')->url($value) : null,
+            get: fn (?string $value) => $value ? asset("storage/{$value}") : null,
         );
     }
 }

@@ -53,6 +53,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('demandantes/jwt', [DemandantesController::class, 'obtenerJWT']);
     // Actualizar demandante autenticado
     Route::match(['post', 'put'], 'demandantes', [DemandantesController::class, 'actualizar']);
+    // Descargar CV
+    Route::get('demandantes/{id}/cv', [DemandantesController::class, 'descargarCv']);
 
     // Registrar títulos
     Route::post('titulos', [TitulosController::class, 'registrar']);

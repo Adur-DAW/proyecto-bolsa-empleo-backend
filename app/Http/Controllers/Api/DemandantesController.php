@@ -90,10 +90,22 @@ class DemandantesController extends Controller
         return response()->json($usuario->demandante);
     }
 
-    public function obtener()
+    public function descargarCv($id)
     {
-        $demandantes = Demandante::all();
+        $usuarioAutenticado = JWTAuth::parseToken()->authenticate();
+        $demandante = Demandante::where('id_demandante', $id)->first();
 
-        return response()->json($demandantes);
+        if (!$demandante || !$demandante->cv_path) {
+            return response()->json(['error' => 'CV no encontrado'], 404);
+        }
+
+        // Seguridad: Solo el propio demandante, admins (centro) o empresas pueden ver CVs
+        if ($usuarioAutenticado->rol !== 'centro' && 
+            $usuarioAutenticado->rol !== 'empresa' && 
+            $usuarioAutenticado->id !== $demandante->id_demandante) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        return response()->download(storage_path("app/public/{$demandante->cv_path}"));
     }
 }
