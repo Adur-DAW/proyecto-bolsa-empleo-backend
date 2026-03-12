@@ -32,8 +32,14 @@ class OfertaCerradaMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $subject = 'Actualización sobre la Oferta: ' . $this->oferta->nombre;
+        
+        if ($this->motivo === 'invitacion') {
+            $subject = 'Te han enviado una Oferta de Empleo: ' . $this->oferta->nombre;
+        }
+
         return new Envelope(
-            subject: 'Actualización sobre la Oferta: ' . $this->oferta->nombre,
+            subject: $subject,
         );
     }
 

@@ -110,7 +110,7 @@ class DemandantesOfertaController extends Controller
         try {
             $oferta = Oferta::find($request->id_oferta);
             if ($oferta && $demandante->email) {
-                Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'adjudicada'));
+                Mail::to($demandante->email)->send(new OfertaCerradaMail($oferta, 'invitacion'));
             }
         } catch (\Exception $e) {
             Log::error('Error enviando email de adjudicación (registro): ' . $e->getMessage());
