@@ -54,6 +54,7 @@ class DashboardController extends Controller
             ->select(
                 'ofertas.id',
                 'ofertas.nombre as oferta',
+                'empresas.id_empresa as id_empresa',
                 'empresas.nombre as empresa',
                 'demandantes_oferta.fecha as fecha_inscripcion',
                 'demandantes_oferta.adjudicada'

@@ -36,12 +36,12 @@ class Empresa extends Model
      */
     protected $fillable = [
         'id_empresa',
+        'cif',
         'validado',
         'nombre',
         'id_familia_profesional',
         'localidad',
         'telefono',
-        'localidad',
         'imagen_url'
     ];
 
