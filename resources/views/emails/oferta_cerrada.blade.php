@@ -7,11 +7,11 @@
 </head>
 <body>
     <h1>Actualización de Oferta de Empleo</h1>
-    <p>Te informamos sobre la oferta <strong>{{ $oferta->nombre }}</strong> en la que estabas inscrito.</p>
-
+    
     @if($motivo === 'adjudicada')
         <p><strong>¡Enhorabuena!</strong></p>
-        <p>Has sido seleccionado para la oferta <strong>{{ $oferta->nombre }}</strong>. La empresa se pondrá en contacto contigo pronto para los siguientes pasos.</p>
+        <p>Te informamos sobre la oferta <strong>{{ $oferta->nombre }}</strong> en la que estabas inscrito.</p>
+        <p>Has sido seleccionado. La empresa se pondrá en contacto contigo pronto para los siguientes pasos.</p>
     @elseif($motivo === 'invitacion')
         <p>Una empresa te ha enviado esta oferta de empleo directamente.</p>
         <p>Puedes entrar en la plataforma para ver los detalles y aceptar o rechazar la propuesta.</p>

@@ -173,6 +173,15 @@ class EmpresasController extends Controller
             $query->where('id_familia_profesional', (int)$request->input('id_familia'));
         }
 
+        if ($request->has('validado')) {
+            $validado = $request->input('validado');
+            if ($validado === 'validadas') {
+                $query->where('validado', true);
+            } elseif ($validado === 'pendientes') {
+                $query->where('validado', false);
+            }
+        }
+
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
